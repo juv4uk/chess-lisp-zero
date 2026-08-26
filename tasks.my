@@ -75,4 +75,46 @@
     (depends-on . (CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL CHESS-LISP-ZERO-CML-NEURAL-KERNEL-MATRIX CHESS-LISP-ZERO-FPGA-KERNEL-SELECTION))
     (origin . chess-lisp-zero)
     (description . "Create the first fixture-level evidence matrix separating my-lisp CPU, CML CPU, CUDA, RTL simulation, synthesis and physical FPGA. Same result is scoped to the exact fixture/kernel; speed and play strength remain separate claims.")))
+
+  ("CHESS-LISP-ZERO-FULL-RULES-FEN" . (
+    (priority . 9.0)
+    (capabilities . (my-lisp chess testing serialization))
+    (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
+    (origin . chess-lisp-zero)
+    (description . "Extend the original .my chess position with castling rights, en-passant target, promotion, halfmove/fullmove counters and deterministic FEN parse/print. Add special-rule fixtures plus standard perft positions. Preserve public persistent apply-move semantics and keep search-only mutation fully reversible.")))
+
+  ("CHESS-LISP-ZERO-WASM-CHESS-API" . (
+    (priority . 9.0)
+    (capabilities . (wasm rust my-lisp chess api testing))
+    (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
+    (origin . chess-lisp-zero)
+    (description . "Expose the pure chess library through the existing persistent my-lisp WASM session: preload chess.my, define typed JSON-safe operations for initial position, legal moves, apply move and terminal status, and preserve native/WASM semantic parity. Do not create a second chess implementation in Rust or JavaScript.")))
+
+  ("CHESS-LISP-ZERO-TAURI-WASM-PLAY-SLICE" . (
+    (priority . 8.0)
+    (capabilities . (tauri wasm frontend chess integration testing))
+    (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-TAURI-SHELL-MVP CHESS-LISP-ZERO-WASM-CHESS-API))
+    (origin . chess-lisp-zero)
+    (description . "Connect the Tauri/web board to the WASM chess API for one real human-vs-legal-move vertical slice: render authoritative position, highlight legal targets, apply a selected move in my-lisp and display terminal status. No Python sidecar, duplicated JavaScript rules or AI claim in this milestone.")))
+
+  ("CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT" . (
+    (priority . 8.0)
+    (capabilities . (chess my-lisp machine-learning testing evidence))
+    (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-FULL-RULES-FEN))
+    (origin . chess-lisp-zero)
+    (description . "Ratify an implementation-independent chess ML boundary: canonical 18x8x8 input planes, side-to-move normalization, castling/en-passant planes, deterministic 1968 UCI policy labels, promotion labels and policy flipping. Derive fixtures from license-cleared evidence and require round-trip/differential checks; do not make historical Python code authoritative.")))
+
+  ("CHESS-LISP-ZERO-MYLISP-PUCT-MCTS" . (
+    (priority . 8.0)
+    (capabilities . (my-lisp chess search mcts testing benchmark))
+    (depends-on . (CHESS-LISP-ZERO-FULL-RULES-FEN CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL))
+    (origin . chess-lisp-zero)
+    (description . "Implement a deterministic single-threaded PUCT/MCTS reference in .my over the authoritative chess API: visit statistics, Q/W/N/P update, expansion, terminal backup, temperature and injectable evaluator. Begin with a deterministic handcrafted evaluator; root noise and concurrency remain separate opt-in extensions. Record fixed-tree fixtures before benchmarking.")))
+
+  ("CHESS-LISP-ZERO-PYTORCH-TEACHER-ORACLE" . (
+    (priority . 6.0)
+    (capabilities . (python pytorch chess machine-learning provenance evidence))
+    (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
+    (origin . chess-lisp-zero)
+    (description . "Define a process boundary that uses the existing chess-tauri-zero PyTorch policy/value network as an optional teacher/oracle for normalized fixtures. Verify model/config/weight provenance, exact input/output contracts and deterministic recorded responses. PyTorch remains replaceable and must not become chess-rule authority or an implicit dependency of the my-lisp semantic core.")))
 )))
