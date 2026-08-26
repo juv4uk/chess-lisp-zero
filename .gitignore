@@ -1,0 +1,15 @@
+# Local/runtime artifacts
+.cache/
+.venv/
+target/
+tmp/
+
+# Generated chess evidence and training state
+data/generated/
+models/generated/
+runs/
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+*.swp
