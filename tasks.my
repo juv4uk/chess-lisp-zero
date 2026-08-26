@@ -1,0 +1,78 @@
+((tasks . (
+  ("CHESS-LISP-ZERO-LICENSE-AND-NOTICE" . (
+    (priority . 9.0)
+    (capabilities . (documentation licensing research))
+    (depends-on . ())
+    (origin . chess-lisp-zero)
+    (description . "Ratify the repository license with owner authority and add NOTICE-third-party.md covering the MIT chess-alpha-zero lineage and BSD-2-Clause chess.js before any code or data is copied. Treat model weights and game corpora as separate provenance decisions.")))
+
+  ("CHESS-LISP-ZERO-CHESS-RULES-PERFT" . (
+    (priority . 10.0)
+    (capabilities . (my-lisp chess testing))
+    (depends-on . ())
+    (origin . chess-lisp-zero)
+    (description . "Implement the first semantic vertical slice as original .my code: 64-cell position, move representation, pseudo-legal generation, king-safety filtering, apply-move, terminal state, and deterministic perft depth 1..3 fixtures. Start with vectors; do not add Rust bit primitives before profiling.")))
+
+  ("CHESS-LISP-ZERO-TAURI-SHELL-MVP" . (
+    (priority . 8.0)
+    (capabilities . (tauri rust frontend))
+    (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE))
+    (origin . chess-lisp-zero)
+    (description . "Create a minimal buildable Tauri v2 shell and chess-board UI using only license-cleared components. Preserve chess-tauri-zero's rendering and busy-state lessons, but do not import its Python sidecar or binaries. Prove targeted Linux structure/build checks; Windows stays CI evidence.")))
+
+  ("CHESS-LISP-ZERO-EMBEDDED-MYLISP-ACTOR" . (
+    (priority . 9.0)
+    (capabilities . (rust my-lisp tauri concurrency))
+    (depends-on . (CHESS-LISP-ZERO-TAURI-SHELL-MVP))
+    (origin . chess-lisp-zero)
+    (description . "Embed canonical my-lisp in Tauri through a single-owner runtime actor: one worker creates and owns Session, preloads core.my and chess libraries, accepts typed channel requests, and returns typed results/events. Do not use unsafe shared Session or a CLI sidecar.")))
+
+  ("CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL" . (
+    (priority . 8.0)
+    (capabilities . (testing evidence javascript my-lisp chess))
+    (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
+    (origin . chess-lisp-zero)
+    (description . "Build a normalized FEN/legal-move/perft differential gate between the my-lisp chess library and chess.js. chess.js is a witness, not semantic authority. Record exact fixture, expected/actual, tool versions and commit SHAs.")))
+
+  ("CHESS-LISP-ZERO-UCI-ADAPTER" . (
+    (priority . 6.0)
+    (capabilities . (my-lisp chess protocol testing))
+    (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
+    (origin . chess-lisp-zero)
+    (description . "Add an optional UCI adapter around the my-lisp chess engine for compatibility and differential comparison with chess-tauri-zero. Keep the internal Tauri API typed; UCI is an external adapter, not the in-process authority.")))
+
+  ("CHESS-LISP-ZERO-CPU-BASELINE-PROFILE" . (
+    (priority . 7.0)
+    (capabilities . (benchmark my-lisp chess evidence))
+    (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL))
+    (origin . chess-lisp-zero)
+    (description . "Measure the vector-based my-lisp baseline on fixed perft/search fixtures using mono-ns. Report correctness separately from elapsed time and identify the dominant operation before proposing bitboards or new primitives.")))
+
+  ("CHESS-LISP-ZERO-TENSOR-DESCRIPTOR-ADR" . (
+    (priority . 7.0)
+    (capabilities . (cml my-lisp cuda architecture))
+    (depends-on . ())
+    (origin . chess-lisp-zero)
+    (description . "Specify a library-level tensor descriptor over ratified NumericBuffer: shape, layout, channel meaning and data. Define authority boundaries between chess-lisp-zero, my-lisp and CML. Do not add a first-class Tensor value or CUDA-named source primitive without evidence.")))
+
+  ("CHESS-LISP-ZERO-CML-NEURAL-KERNEL-MATRIX" . (
+    (priority . 6.0)
+    (capabilities . (cml cuda gpu testing architecture))
+    (depends-on . (CHESS-LISP-ZERO-TENSOR-DESCRIPTOR-ADR))
+    (origin . chess-lisp-zero)
+    (description . "Map the minimum AlphaZero inference operations against live CML Compute IR: matmul, conv2d, relu, reductions, softmax and batch-normalization inference. For each classify implemented/expressible/missing, required semantic obligation, CPU oracle and smallest CUDA differential slice. Design only; no broad kernel implementation.")))
+
+  ("CHESS-LISP-ZERO-FPGA-KERNEL-SELECTION" . (
+    (priority . 6.0)
+    (capabilities . (fpga-lisp hardware chess evidence architecture))
+    (depends-on . (CHESS-LISP-ZERO-CPU-BASELINE-PROFILE))
+    (origin . chess-lisp-zero)
+    (description . "Using the measured CPU profile and live fpga-lisp ISA 1.1 limits, select one bounded first FPGA kernel such as move encoding, board-plane transform, one attack-mask class, material evaluation or fixed reduction. Specify fixtures and simulation/synthesis/hardware evidence separately; do not claim full-engine FPGA execution.")))
+
+  ("CHESS-LISP-ZERO-CROSS-SUBSTRATE-EVIDENCE" . (
+    (priority . 5.0)
+    (capabilities . (evidence my-lisp cml cuda fpga-lisp chess))
+    (depends-on . (CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL CHESS-LISP-ZERO-CML-NEURAL-KERNEL-MATRIX CHESS-LISP-ZERO-FPGA-KERNEL-SELECTION))
+    (origin . chess-lisp-zero)
+    (description . "Create the first fixture-level evidence matrix separating my-lisp CPU, CML CPU, CUDA, RTL simulation, synthesis and physical FPGA. Same result is scoped to the exact fixture/kernel; speed and play strength remain separate claims.")))
+)))
