@@ -1,15 +1,55 @@
 ; Original chess semantics for chess-lisp-zero.
 ; Board indexing: a1=0, b1=1, ... h8=63.
-; Position: (board side), move: (from to).
+; Move: (from to).
+; Position: (board side castling ep halfmove fullmove)
+;   castling = (K Q k q) subset — symbols for available castling rights
+;   ep = square index or () — en-passant target
+;   halfmove = integer — halfmove clock (50-move rule)
+;   fullmove = integer — fullmove number (starts at 1)
 
 (def chess-empty (quote ()))
 
 (def chess-move (lambda (from to) (list from to)))
 (def chess-move-from car)
 (def chess-move-to second)
-(def chess-position (lambda (board side) (list board side)))
-(def chess-position-board car)
-(def chess-position-side second)
+
+(def chess-position
+  (lambda (board side castling ep halfmove fullmove)
+    (list board side castling ep halfmove fullmove)))
+(def chess-position-board (lambda (p) (car p)))
+(def chess-position-side (lambda (p) (car (cdr p))))
+(def chess-position-castling (lambda (p) (car (cdr (cdr p)))))
+(def chess-position-ep (lambda (p) (car (cdr (cdr (cdr p))))))
+(def chess-position-halfmove (lambda (p) (car (cdr (cdr (cdr (cdr p)))))))
+(def chess-position-fullmove (lambda (p) (car (cdr (cdr (cdr (cdr (cdr p))))))))
+
+(def chess-castling-king?
+  (lambda (castling side)
+    (let ((flag (cond ((eq side (quote white)) (quote K)) (t (quote k)))))
+      (cond ((atom castling) (quote ()))
+            ((eq (car castling) flag) t)
+            (t (chess-castling-king? (cdr castling) side))))))
+
+(def chess-castling-queen?
+  (lambda (castling side)
+    (let ((flag (cond ((eq side (quote white)) (quote Q)) (t (quote q)))))
+      (cond ((atom castling) (quote ()))
+            ((eq (car castling) flag) t)
+            (t (chess-castling-queen? (cdr castling) side))))))
+
+(def chess-remove-castling
+  (lambda (castling flag)
+    (cond ((atom castling) (quote ()))
+          ((eq (car castling) flag) (cdr castling))
+          (t (cons (car castling) (chess-remove-castling (cdr castling) flag))))))
+
+(def chess-remove-castling-for-piece
+  (lambda (castling piece)
+    (cond ((eq piece (quote wk)) (chess-remove-castling (chess-remove-castling castling (quote K)) (quote Q)))
+          ((eq piece (quote bk)) (chess-remove-castling (chess-remove-castling castling (quote k)) (quote q)))
+          ((eq piece (quote wr)) (chess-remove-castling castling (quote K)))
+          ((eq piece (quote br)) (chess-remove-castling castling (quote k)))
+          (t castling))))
 
 (def chess-opposite
   (lambda (side)
