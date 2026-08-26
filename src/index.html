@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>chess-lisp-zero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #a0a0c0;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, 64px);
+      grid-template-rows: repeat(8, 64px);
+      border: 2px solid #404060;
+    }
+    .cell {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+    .light { background: #b58863; }
+    .dark { background: #f0d9b5; }
+    .status {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #707090;
+    }
+  </style>
+</head>
+<body>
+  <h1>chess-lisp-zero</h1>
+  <div class="board" id="board"></div>
+  <div class="status" id="status">Tauri shell MVP — ready</div>
+
+  <script>
+    const PIECES = {
+      'r': '\u265C', 'n': '\u265E', 'b': '\u265D', 'q': '\u265B',
+      'k': '\u265A', 'p': '\u265F',
+      'R': '\u2656', 'N': '\u2658', 'B': '\u2657', 'Q': '\u2655',
+      'K': '\u2654', 'P': '\u2659'
+    };
+
+    const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+
+    function renderBoard(fen) {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      const rows = fen.split('/');
+      for (let r = 0; r < 8; r++) {
+        let col = 0;
+        for (const ch of rows[r]) {
+          if (ch >= '1' && ch <= '8') {
+            for (let i = 0; i < parseInt(ch); i++) {
+              addCell(board, r, col, null);
+              col++;
+            }
+          } else {
+            addCell(board, r, col, ch);
+            col++;
+          }
+        }
+      }
+    }
+
+    function addCell(board, row, col, piece) {
+      const cell = document.createElement('div');
+      cell.className = 'cell ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+      if (piece) cell.textContent = PIECES[piece] || '';
+      board.appendChild(cell);
+    }
+
+    renderBoard(START_FEN);
+  </script>
+</body>
+</html>

@@ -5,4 +5,4 @@
   (language-authority . "juv4uk/my-lisp")
   (third-party-code . none)
   (third-party-data . none)
-  (license . unresolved)))
+  (license . mit)))
