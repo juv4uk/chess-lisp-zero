@@ -3,15 +3,20 @@ use serde::Serialize;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
-/// Typed request sent from Tauri command to the worker thread.
+/// Typed request with a response channel attached.
+pub struct RuntimeRequest {
+    pub kind: RequestKind,
+    /// Response channel: worker sends RuntimeResponse here.
+    pub respond_to: Sender<RuntimeResponse>,
+}
+
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub enum RuntimeRequest {
+pub enum RequestKind {
     Eval { source: String },
     Load { path: String },
 }
 
-/// Typed response sent back from the worker thread.
+/// Typed response from the worker thread.
 #[derive(Debug, Clone, Serialize)]
 pub enum RuntimeResponse {
     Ok { value: String },
@@ -37,7 +42,7 @@ impl ChessRuntime {
             my_lisp_host::install();
 
             // Create session with root environment.
-    let session = Session::default();
+            let session = Session::default();
 
             // Try to preload core.my from sibling my-lisp repo.
             let core_paths = [
@@ -47,52 +52,47 @@ impl ChessRuntime {
             ];
             for path in &core_paths {
                 if std::path::Path::new(path).exists() {
-                    let source = match std::fs::read_to_string(path) {
-                        Ok(s) => s,
-                        Err(_) => continue,
-                    };
-                    match parse(&source) {
-                        Ok(exprs) => {
+                    if let Ok(source) = std::fs::read_to_string(path) {
+                        if let Ok(exprs) = parse(&source) {
                             for expr in exprs {
                                 let _ = eval_expr(&expr, &session.environment);
                             }
+                            break;
                         }
-                        Err(_) => continue,
                     }
-                    break;
                 }
             }
 
             // Event loop: process requests sequentially.
             while let Ok(request) = receiver.recv() {
-                match request {
-                    RuntimeRequest::Eval { source } => {
-                        let response = match parse(&source) {
+                let response = match request.kind {
+                    RequestKind::Eval { source } => {
+                        match parse(&source) {
                             Ok(exprs) => {
                                 let mut last = Value::Nil;
+                                let mut error = None;
                                 for expr in exprs {
                                     match eval_expr(&expr, &session.environment) {
                                         Ok(value) => last = value,
-                                        Err(error) => {
-                                            let _ = Self::respond_ok(&RuntimeResponse::Err {
-                                                message: error.to_string(),
-                                            });
+                                        Err(err) => {
+                                            error = Some(err.to_string());
                                             break;
                                         }
                                     }
                                 }
-                                RuntimeResponse::Ok {
-                                    value: last.to_string(),
+                                if let Some(msg) = error {
+                                    RuntimeResponse::Err { message: msg }
+                                } else {
+                                    RuntimeResponse::Ok { value: last.to_string() }
                                 }
                             }
                             Err(error) => RuntimeResponse::Err {
                                 message: error.to_string(),
                             },
-                        };
-                        let _ = Self::respond_ok(&response);
+                        }
                     }
-                    RuntimeRequest::Load { path } => {
-                        let response = match std::fs::read_to_string(&path) {
+                    RequestKind::Load { path } => {
+                        match std::fs::read_to_string(&path) {
                             Ok(source) => match parse(&source) {
                                 Ok(exprs) => {
                                     for expr in exprs {
@@ -109,42 +109,34 @@ impl ChessRuntime {
                             Err(error) => RuntimeResponse::Err {
                                 message: format!("read error: {}", error),
                             },
-                        };
-                        let _ = Self::respond_ok(&response);
+                        }
                     }
-                }
+                };
+                // Send response back; ignore send failure (caller dropped).
+                let _ = request.respond_to.send(response);
             }
         });
 
         Self { sender }
     }
 
-    /// Send a request to the worker. For MVP, responses are fire-and-forget
-    /// through a side channel; full bidirectional sync can be added later.
-    pub fn send(&self, request: RuntimeRequest) -> Result<(), String> {
+    /// Send a request and wait for the response synchronously.
+    pub fn request(&self, kind: RequestKind) -> Result<RuntimeResponse, String> {
+        let (respond_to, rx) = channel::<RuntimeResponse>();
         self.sender
-            .send(request)
-            .map_err(|e| format!("runtime disconnected: {}", e))
-    }
-
-    fn respond_ok(_response: &RuntimeResponse) -> Result<(), ()> {
-        // Placeholder: in full implementation, this sends back through
-        // a response channel. For MVP, we fire-and-forget.
-        Ok(())
+            .send(RuntimeRequest { kind, respond_to })
+            .map_err(|e| format!("runtime disconnected: {}", e))?;
+        rx.recv()
+            .map_err(|e| format!("runtime response channel closed: {}", e))
     }
 }
 
 /// Synchronous evaluation helper for Tauri commands.
-/// Creates a one-shot channel, sends Eval request, waits for response.
+/// Creates a one-shot request through the actor.
 pub fn eval_sync(source: String) -> Result<String, String> {
-    // For MVP: simple direct evaluation without persistent session.
-    // Full actor with response channel comes next iteration.
-    my_lisp_host::install();
-    let session = Session::default();
-    let expressions = parse(&source).map_err(|e| e.to_string())?;
-    let mut last = Value::Nil;
-    for expr in expressions {
-        last = eval_expr(&expr, &session.environment).map_err(|e| e.to_string())?;
+    let runtime = ChessRuntime::new();
+    match runtime.request(RequestKind::Eval { source })? {
+        RuntimeResponse::Ok { value } => Ok(value),
+        RuntimeResponse::Err { message } => Err(message),
     }
-    Ok(last.to_string())
 }

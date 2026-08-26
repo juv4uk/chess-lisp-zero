@@ -1,6 +1,6 @@
 mod chess_runtime;
 
-use chess_runtime::{eval_sync, ChessRuntime, RuntimeRequest};
+use chess_runtime::{eval_sync, ChessRuntime, RequestKind, RuntimeResponse};
 use std::sync::Mutex;
 use tauri::State;
 
@@ -41,8 +41,8 @@ fn eval_my_lisp(source: String) -> Result<String, String> {
 #[tauri::command]
 fn load_my_lisp_file(path: String, state: State<AppState>) -> Result<String, String> {
     let runtime = state.runtime.lock().map_err(|e| e.to_string())?;
-    runtime
-        .send(RuntimeRequest::Load { path })
-        .map_err(|e| e.to_string())?;
-    Ok("load request sent".to_string())
+    match runtime.request(RequestKind::Load { path })? {
+        RuntimeResponse::Ok { value } => Ok(value),
+        RuntimeResponse::Err { message } => Err(message),
+    }
 }
