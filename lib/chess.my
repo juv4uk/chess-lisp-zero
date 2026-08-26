@@ -1,0 +1,362 @@
+; Original chess semantics for chess-lisp-zero.
+; Board indexing: a1=0, b1=1, ... h8=63.
+; Position: (board side), move: (from to).
+
+(def chess-empty (quote ()))
+
+(def chess-move (lambda (from to) (list from to)))
+(def chess-move-from car)
+(def chess-move-to second)
+(def chess-position (lambda (board side) (list board side)))
+(def chess-position-board car)
+(def chess-position-side second)
+
+(def chess-opposite
+  (lambda (side)
+    (cond ((eq side (quote white)) (quote black))
+          (t (quote white)))))
+
+(def chess-white-piece?
+  (lambda (piece)
+    (cond ((eq piece (quote wp)) t) ((eq piece (quote wn)) t)
+          ((eq piece (quote wb)) t) ((eq piece (quote wr)) t)
+          ((eq piece (quote wq)) t) ((eq piece (quote wk)) t)
+          (t (quote ())))))
+
+(def chess-black-piece?
+  (lambda (piece)
+    (cond ((eq piece (quote bp)) t) ((eq piece (quote bn)) t)
+          ((eq piece (quote bb)) t) ((eq piece (quote br)) t)
+          ((eq piece (quote bq)) t) ((eq piece (quote bk)) t)
+          (t (quote ())))))
+
+(def chess-own-piece?
+  (lambda (side piece)
+    (cond ((eq side (quote white)) (chess-white-piece? piece))
+          (t (chess-black-piece? piece)))))
+
+(def chess-enemy-piece?
+  (lambda (side piece)
+    (chess-own-piece? (chess-opposite side) piece)))
+
+(def chess-file (lambda (square) (mod square 8)))
+(def chess-rank (lambda (square) (quotient square 8)))
+(def chess-square (lambda (file rank) (+ file (* rank 8))))
+
+(def chess-coordinate-valid?
+  (lambda (file rank)
+    (cond ((< file 0) (quote ()))
+          ((> file 7) (quote ()))
+          ((< rank 0) (quote ()))
+          ((> rank 7) (quote ()))
+          (t t))))
+
+(def chess-copy-board-into
+  (lambda (source target index)
+    (cond ((eq index 64) target)
+          (t ((lambda ()
+                (vector-set! target index (vector-ref source index))
+                (chess-copy-board-into source target (+ index 1))))))))
+
+(def chess-copy-board
+  (lambda (board)
+    (chess-copy-board-into board (make-vector 64) 0)))
+
+(def chess-board-from-list-into
+  (lambda (pieces board index)
+    (cond ((atom pieces) board)
+          (t ((lambda ()
+                (vector-set! board index (car pieces))
+                (chess-board-from-list-into (cdr pieces) board (+ index 1))))))))
+
+(def chess-board-from-list
+  (lambda (pieces)
+    (chess-board-from-list-into pieces (make-vector 64) 0)))
+
+(def chess-initial-position
+  (lambda ()
+    (chess-position
+      (chess-board-from-list
+        (quote (wr wn wb wq wk wb wn wr
+                wp wp wp wp wp wp wp wp
+                () () () () () () () ()
+                () () () () () () () ()
+                () () () () () () () ()
+                () () () () () () () ()
+                bp bp bp bp bp bp bp bp
+                br bn bb bq bk bb bn br)))
+      (quote white))))
+
+(def chess-add-target
+  (lambda (board side from file rank moves)
+    (cond ((not (chess-coordinate-valid? file rank)) moves)
+          (t (let ((to (chess-square file rank)))
+               (cond ((chess-own-piece? side (vector-ref board to)) moves)
+                     (t (cons (chess-move from to) moves))))))))
+
+(def chess-add-offsets
+  (lambda (board side from file rank offsets moves)
+    (cond ((atom offsets) moves)
+          (t (let* ((offset (car offsets))
+                    (next (chess-add-target board side from
+                              (+ file (car offset)) (+ rank (second offset)) moves)))
+               (chess-add-offsets board side from file rank (cdr offsets) next))))))
+
+(def chess-ray-moves
+  (lambda (board side from file rank df dr moves)
+    (let ((next-file (+ file df)) (next-rank (+ rank dr)))
+      (cond ((not (chess-coordinate-valid? next-file next-rank)) moves)
+            (t (let* ((to (chess-square next-file next-rank))
+                      (target (vector-ref board to)))
+                 (cond ((chess-own-piece? side target) moves)
+                       ((chess-enemy-piece? side target)
+                        (cons (chess-move from to) moves))
+                       (t (chess-ray-moves board side from next-file next-rank
+                            df dr (cons (chess-move from to) moves))))))))))
+
+(def chess-add-rays
+  (lambda (board side from file rank directions moves)
+    (cond ((atom directions) moves)
+          (t (let* ((direction (car directions))
+                    (next (chess-ray-moves board side from file rank
+                            (car direction) (second direction) moves)))
+               (chess-add-rays board side from file rank (cdr directions) next))))))
+
+(def chess-knight-offsets
+  (quote ((1 2) (2 1) (2 -1) (1 -2) (-1 -2) (-2 -1) (-2 1) (-1 2))))
+(def chess-king-offsets
+  (quote ((1 0) (1 1) (0 1) (-1 1) (-1 0) (-1 -1) (0 -1) (1 -1))))
+(def chess-bishop-directions (quote ((1 1) (-1 1) (-1 -1) (1 -1))))
+(def chess-rook-directions (quote ((1 0) (0 1) (-1 0) (0 -1))))
+(def chess-queen-directions
+  (quote ((1 0) (1 1) (0 1) (-1 1) (-1 0) (-1 -1) (0 -1) (1 -1))))
+
+(def chess-pawn-moves
+  (lambda (board side from file rank moves)
+    (let* ((direction (cond ((eq side (quote white)) 1) (t -1)))
+           (start-rank (cond ((eq side (quote white)) 1) (t 6)))
+           (one-rank (+ rank direction)))
+      (cond ((not (chess-coordinate-valid? file one-rank)) moves)
+            (t (let* ((one (chess-square file one-rank))
+                      (after-one
+                        (cond ((eq (vector-ref board one) chess-empty)
+                               (cons (chess-move from one) moves))
+                              (t moves)))
+                      (two-rank (+ rank (* direction 2)))
+                      (after-two
+                        (cond ((eq rank start-rank)
+                               (cond ((eq (vector-ref board one) chess-empty)
+                                      (let ((two (chess-square file two-rank)))
+                                        (cond ((eq (vector-ref board two) chess-empty)
+                                               (cons (chess-move from two) after-one))
+                                              (t after-one))))
+                                     (t after-one)))
+                              (t after-one)))
+                      (after-left
+                        (cond ((chess-coordinate-valid? (- file 1) one-rank)
+                               (let ((to (chess-square (- file 1) one-rank)))
+                                 (cond ((chess-enemy-piece? side (vector-ref board to))
+                                        (cons (chess-move from to) after-two))
+                                       (t after-two))))
+                              (t after-two))))
+                 (cond ((chess-coordinate-valid? (+ file 1) one-rank)
+                        (let ((to (chess-square (+ file 1) one-rank)))
+                          (cond ((chess-enemy-piece? side (vector-ref board to))
+                                 (cons (chess-move from to) after-left))
+                                (t after-left))))
+                       (t after-left))))))))
+
+(def chess-piece-pseudo-moves
+  (lambda (board side from moves)
+    (let* ((piece (vector-ref board from))
+           (file (chess-file from))
+           (rank (chess-rank from)))
+      (cond ((eq piece (quote wp)) (chess-pawn-moves board side from file rank moves))
+            ((eq piece (quote bp)) (chess-pawn-moves board side from file rank moves))
+            ((eq piece (quote wn)) (chess-add-offsets board side from file rank chess-knight-offsets moves))
+            ((eq piece (quote bn)) (chess-add-offsets board side from file rank chess-knight-offsets moves))
+            ((eq piece (quote wb)) (chess-add-rays board side from file rank chess-bishop-directions moves))
+            ((eq piece (quote bb)) (chess-add-rays board side from file rank chess-bishop-directions moves))
+            ((eq piece (quote wr)) (chess-add-rays board side from file rank chess-rook-directions moves))
+            ((eq piece (quote br)) (chess-add-rays board side from file rank chess-rook-directions moves))
+            ((eq piece (quote wq)) (chess-add-rays board side from file rank chess-queen-directions moves))
+            ((eq piece (quote bq)) (chess-add-rays board side from file rank chess-queen-directions moves))
+            ((eq piece (quote wk)) (chess-add-offsets board side from file rank chess-king-offsets moves))
+            ((eq piece (quote bk)) (chess-add-offsets board side from file rank chess-king-offsets moves))
+            (t moves)))))
+
+(def chess-pseudo-moves-from
+  (lambda (board side index moves)
+    (cond ((eq index 64) moves)
+          ((chess-own-piece? side (vector-ref board index))
+           (chess-pseudo-moves-from board side (+ index 1)
+             (chess-piece-pseudo-moves board side index moves)))
+          (t (chess-pseudo-moves-from board side (+ index 1) moves)))))
+
+(def chess-pseudo-moves
+  (lambda (position)
+    (chess-pseudo-moves-from (chess-position-board position)
+      (chess-position-side position) 0 (quote ()))))
+
+(def chess-apply-board-move
+  (lambda (board move)
+    (let* ((next (chess-copy-board board))
+           (piece (vector-ref board (chess-move-from move))))
+      ((lambda ()
+         (vector-set! next (chess-move-from move) chess-empty)
+         (vector-set! next (chess-move-to move) piece)
+         next)))))
+
+; Search-only mutation is paired with an immediate undo. Public apply-move
+; below remains persistent and never exposes a partially mutated position.
+(def chess-do-move!
+  (lambda (board move)
+    (let* ((from (chess-move-from move))
+           (to (chess-move-to move))
+           (piece (vector-ref board from))
+           (captured (vector-ref board to)))
+      ((lambda ()
+         (vector-set! board from chess-empty)
+         (vector-set! board to piece)
+         captured)))))
+
+(def chess-undo-move!
+  (lambda (board move captured)
+    (let ((from (chess-move-from move))
+          (to (chess-move-to move)))
+      ((lambda ()
+         (vector-set! board from (vector-ref board to))
+         (vector-set! board to captured)
+         board)))))
+
+(def chess-apply-move
+  (lambda (position move)
+    (chess-position
+      (chess-apply-board-move (chess-position-board position) move)
+      (chess-opposite (chess-position-side position)))))
+
+(def chess-find-piece-from
+  (lambda (board piece index)
+    (cond ((eq index 64) -1)
+          ((eq (vector-ref board index) piece) index)
+          (t (chess-find-piece-from board piece (+ index 1))))))
+
+(def chess-find-king
+  (lambda (board side)
+    (chess-find-piece-from board
+      (cond ((eq side (quote white)) (quote wk)) (t (quote bk))) 0)))
+
+(def chess-ray-attacked?
+  (lambda (board file rank df dr attacker-a attacker-b)
+    (let ((next-file (+ file df)) (next-rank (+ rank dr)))
+      (cond ((not (chess-coordinate-valid? next-file next-rank)) (quote ()))
+            (t (let ((piece (vector-ref board (chess-square next-file next-rank))))
+                 (cond ((eq piece chess-empty)
+                        (chess-ray-attacked? board next-file next-rank df dr attacker-a attacker-b))
+                       ((eq piece attacker-a) t)
+                       ((eq piece attacker-b) t)
+                       (t (quote ())))))))))
+
+(def chess-any-ray-attacked?
+  (lambda (board file rank directions attacker-a attacker-b)
+    (cond ((atom directions) (quote ()))
+          (t (let ((direction (car directions)))
+               (cond ((chess-ray-attacked? board file rank
+                        (car direction) (second direction) attacker-a attacker-b) t)
+                     (t (chess-any-ray-attacked? board file rank (cdr directions)
+                          attacker-a attacker-b))))))))
+
+(def chess-offset-attacker?
+  (lambda (board file rank offsets attacker)
+    (cond ((atom offsets) (quote ()))
+          (t (let* ((offset (car offsets))
+                    (next-file (+ file (car offset)))
+                    (next-rank (+ rank (second offset))))
+               (cond ((chess-coordinate-valid? next-file next-rank)
+                      (cond ((eq (vector-ref board (chess-square next-file next-rank)) attacker) t)
+                            (t (chess-offset-attacker? board file rank (cdr offsets) attacker))))
+                     (t (chess-offset-attacker? board file rank (cdr offsets) attacker))))))))
+
+(def chess-square-attacked?
+  (lambda (board square by-side)
+    (let* ((file (chess-file square))
+           (rank (chess-rank square))
+           (knight (cond ((eq by-side (quote white)) (quote wn)) (t (quote bn))))
+           (king (cond ((eq by-side (quote white)) (quote wk)) (t (quote bk))))
+           (bishop (cond ((eq by-side (quote white)) (quote wb)) (t (quote bb))))
+           (rook (cond ((eq by-side (quote white)) (quote wr)) (t (quote br))))
+           (queen (cond ((eq by-side (quote white)) (quote wq)) (t (quote bq))))
+           (pawn (cond ((eq by-side (quote white)) (quote wp)) (t (quote bp))))
+           (pawn-rank (+ rank (cond ((eq by-side (quote white)) -1) (t 1)))))
+      (cond ((chess-offset-attacker? board file rank chess-knight-offsets knight) t)
+            ((chess-offset-attacker? board file rank chess-king-offsets king) t)
+            ((chess-any-ray-attacked? board file rank chess-bishop-directions bishop queen) t)
+            ((chess-any-ray-attacked? board file rank chess-rook-directions rook queen) t)
+            ((chess-coordinate-valid? (- file 1) pawn-rank)
+             (cond ((eq (vector-ref board (chess-square (- file 1) pawn-rank)) pawn) t)
+                   ((chess-coordinate-valid? (+ file 1) pawn-rank)
+                    (eq (vector-ref board (chess-square (+ file 1) pawn-rank)) pawn))
+                   (t (quote ()))))
+            ((chess-coordinate-valid? (+ file 1) pawn-rank)
+             (eq (vector-ref board (chess-square (+ file 1) pawn-rank)) pawn))
+            (t (quote ()))))))
+
+(def chess-in-check?
+  (lambda (board side)
+    (let ((king (chess-find-king board side)))
+      (cond ((eq king -1) t)
+            (t (chess-square-attacked? board king (chess-opposite side)))))))
+
+(def chess-legal-move?
+  (lambda (position move)
+    (let* ((side (chess-position-side position))
+           (board (chess-position-board position))
+           (captured (chess-do-move! board move))
+           (legal (not (chess-in-check? board side))))
+      ((lambda ()
+         (chess-undo-move! board move captured)
+         legal)))))
+
+(def chess-legal-moves-filter
+  (lambda (position moves accepted)
+    (cond ((atom moves) (reverse accepted))
+          ((chess-legal-move? position (car moves))
+           (chess-legal-moves-filter position (cdr moves) (cons (car moves) accepted)))
+          (t (chess-legal-moves-filter position (cdr moves) accepted)))))
+
+(def chess-legal-moves
+  (lambda (position)
+    (chess-legal-moves-filter position (chess-pseudo-moves position) (quote ()))))
+
+(def chess-terminal-state
+  (lambda (position)
+    (let ((moves (chess-legal-moves position)))
+      (cond ((not (atom moves)) (quote ongoing))
+            ((chess-in-check? (chess-position-board position) (chess-position-side position))
+             (quote checkmate))
+            (t (quote stalemate))))))
+
+(def chess-perft-pseudo
+  (lambda (board side moves depth total)
+    (cond ((atom moves) total)
+          (t (let* ((move (car moves))
+                    (captured (chess-do-move! board move)))
+               (cond ((chess-in-check? board side)
+                      ((lambda ()
+                         (chess-undo-move! board move captured)
+                         (chess-perft-pseudo board side (cdr moves) depth total))))
+                     (t (let ((nodes (chess-perft
+                                      (chess-position board (chess-opposite side))
+                                      (- depth 1))))
+                          ((lambda ()
+                             (chess-undo-move! board move captured)
+                             (chess-perft-pseudo board side (cdr moves) depth
+                               (+ total nodes))))))))))))
+
+(def chess-perft
+  (lambda (position depth)
+    (cond ((eq depth 0) 1)
+          (t (let ((board (chess-position-board position))
+                   (side (chess-position-side position)))
+               (chess-perft-pseudo board side
+                 (chess-pseudo-moves position) depth 0))))))
