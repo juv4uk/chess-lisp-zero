@@ -15,9 +15,18 @@ separate provenance decision and license check before inclusion:
 
 | Material | Source | License | Status |
 |---|---|---|---|
-| chess.js (frontend validation, differential witness) | [chess.js](https://github.com/jhlywa/chess.js) | BSD-2-Clause | planned, not imported |
 | chess-tauri-zero UI patterns (board rendering, busy-state guard) | chess-tauri-zero (MIT, Samuel Gravan / Ken Morishita) | MIT | planned, not imported |
 | Model weights / game corpora | TBD | TBD | not yet decided |
+
+## Decided against: chess.js
+
+Owner decision, 2026-08-27 ("то хай буде чиста моя ліцензія"): chess.js
+(BSD-2-Clause) is not used anywhere in this project, not even as an
+out-of-tree differential-testing witness (the earlier
+`tools/witness-chessjs.mjs`, removed). CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL
+uses published perft reference data for standard chess-programming-wiki
+test positions instead — public facts/numbers, not third-party code, so
+no license/NOTICE entry is needed for it at all.
 
 ## License of this repository
 

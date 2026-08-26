@@ -203,8 +203,9 @@ semantic-core коміту `5320bf8`. Shell поки показує статич
 
 1. Завершити full rules: castling, en passant, promotion, FEN.
 2. Виконати perft 1–3 і tactical terminal fixtures.
-3. Додати differential witness через `chess.js` або інший license-cleared
-   oracle.
+3. Додати differential witness через публічні perft-дані (chess-programming-wiki
+   стандартні позиції) — не `chess.js`, рішення власника 2026-08-27
+   ("чиста моя ліцензія"), див. `NOTICE-third-party.md`.
 
 ### M1 — жива гра
 

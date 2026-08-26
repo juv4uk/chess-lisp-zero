@@ -4,7 +4,7 @@
     (capabilities . (documentation licensing research))
     (depends-on . ())
     (origin . chess-lisp-zero)
-    (description . "Ratify the repository license with owner authority and add NOTICE-third-party.md covering the MIT chess-alpha-zero lineage and BSD-2-Clause chess.js before any code or data is copied. Treat model weights and game corpora as separate provenance decisions.")))
+    (description . "Ratify the repository license with owner authority and add NOTICE-third-party.md covering the MIT chess-alpha-zero lineage before any code or data is copied. Owner decision 2026-08-27: chess.js is not used anywhere in this project (not even as an out-of-tree witness), so it needs no NOTICE entry. Treat model weights and game corpora as separate provenance decisions. STATUS: resolved -- NOTICE-third-party.md exists and lists no unresolved third-party material.")))
 
   ("CHESS-LISP-ZERO-CHESS-RULES-PERFT" . (
     (priority . 10.0)
@@ -29,10 +29,10 @@
 
   ("CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL" . (
     (priority . 8.0)
-    (capabilities . (testing evidence javascript my-lisp chess))
+    (capabilities . (testing evidence my-lisp chess))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
-    (description . "Build a normalized FEN/legal-move/perft differential gate between the my-lisp chess library and chess.js. chess.js is a witness, not semantic authority. Record exact fixture, expected/actual, tool versions and commit SHAs.")))
+    (description . "Build a normalized FEN/legal-move/perft differential gate between the my-lisp chess library and published perft reference data (chess-programming-wiki standard test positions -- starting position, Kiwipete, position 3, etc.). Owner decision 2026-08-27: no chess.js, not even as an out-of-tree witness (tools/witness-chessjs.mjs removed) -- published counts/divide breakdowns are public facts, not third-party code, and need no license/NOTICE entry. Source the reference numbers from the published tables directly (do not hand-transcribe from memory); record exact fixture, expected/actual, source citation and commit SHAs. Name retained for dependency-graph stability even though the witness is no longer chess.js.")))
 
   ("CHESS-LISP-ZERO-UCI-ADAPTER" . (
     (priority . 6.0)

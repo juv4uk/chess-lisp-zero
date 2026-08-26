@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
-"""Differential gate: my-lisp chess library vs chess.js witness.
+"""Differential gate: my-lisp chess library vs published perft reference data.
 
-CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL harness.
+CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL harness (name kept for dependency-graph
+stability; the witness itself is no longer chess.js -- owner decision
+2026-08-27, "чиста моя ліцензія": chess.js is not used anywhere in this
+project, not even out-of-tree. tools/witness-chessjs.mjs is removed).
 
 - my-lisp side: executes lib/chess.my through the semantic oracle TCP
   service (127.0.0.1:9999, sexpr protocol).
-- witness side: precomputed chess.js results produced by
-  tools/witness-chessjs.mjs (out-of-tree vendored copy).
+- witness side: witness.json built from PUBLISHED chess-programming-wiki
+  perft reference data (standard positions -- starting position, Kiwipete,
+  position 3, etc.) for the "results"/"moves" schema below, not generated
+  by running any third-party engine. Source the numbers from the published
+  tables directly and cite them in witness.json's provenance -- do not
+  hand-transcribe from memory into a permanent fixture.
 
 Normalization contract: every legal move becomes the single integer
 from*64 + to (square indices a1=0..h8=63), compared as sorted lists.
