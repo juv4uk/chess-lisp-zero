@@ -125,7 +125,49 @@
                 () () () () () () () ()
                 bp bp bp bp bp bp bp bp
                 br bn bb bq bk bb bn br)))
-      (quote white))))
+      (quote white)
+      (quote (K Q k q))
+      ()
+      0
+      1)))
+
+; --- FEN parse/print ---
+
+(def chess-piece-from-char
+  (lambda (c)
+    (cond ((eq c (quote P)) (quote wp)) ((eq c (quote p)) (quote bp))
+          ((eq c (quote N)) (quote wn)) ((eq c (quote n)) (quote bn))
+          ((eq c (quote B)) (quote wb)) ((eq c (quote b)) (quote bb))
+          ((eq c (quote R)) (quote wr)) ((eq c (quote r)) (quote br))
+          ((eq c (quote Q)) (quote wq)) ((eq c (quote q)) (quote bq))
+          ((eq c (quote K)) (quote wk)) ((eq c (quote k)) (quote bk))
+          (t chess-empty))))
+
+(def chess-char-from-piece
+  (lambda (piece)
+    (cond ((eq piece (quote wp)) (quote P)) ((eq piece (quote bp)) (quote p))
+          ((eq piece (quote wn)) (quote N)) ((eq piece (quote bn)) (quote n))
+          ((eq piece (quote wb)) (quote B)) ((eq piece (quote bb)) (quote b))
+          ((eq piece (quote wr)) (quote R)) ((eq piece (quote br)) (quote r))
+          ((eq piece (quote wq)) (quote Q)) ((eq piece (quote bq)) (quote q))
+          ((eq piece (quote wk)) (quote K)) ((eq piece (quote bk)) (quote k))
+          (t (quote /)))))
+
+(def chess-parse-fen-board
+  (lambda (chars index board)
+    (cond ((eq index 64) board)
+          ((atom chars) board)
+          (t (let ((c (car chars)))
+               (cond ((eq c (quote /)) (chess-parse-fen-board (cdr chars) index board))
+                     ((>= c (quote 1))
+                      (cond ((<= c (quote 8))
+                             (chess-parse-fen-board (cdr chars) (+ index (- c (quote 0))) board))
+                            (t ((lambda ()
+                                  (vector-set! board index (chess-piece-from-char c))
+                                  (chess-parse-fen-board (cdr chars) (+ index 1) board))))))
+                     (t ((lambda ()
+                           (vector-set! board index (chess-piece-from-char c))
+                           (chess-parse-fen-board (cdr chars) (+ index 1) board)))))))))
 
 (def chess-add-target
   (lambda (board side from file rank moves)
@@ -271,9 +313,102 @@
 
 (def chess-apply-move
   (lambda (position move)
-    (chess-position
-      (chess-apply-board-move (chess-position-board position) move)
-      (chess-opposite (chess-position-side position)))))
+    (let* ((board (chess-position-board position))
+           (side (chess-position-side position))
+           (castling (chess-position-castling position))
+           (ep (chess-position-ep position))
+           (halfmove (chess-position-halfmove position))
+           (fullmove (chess-position-fullmove position))
+           (from (chess-move-from move))
+           (to (chess-move-to move))
+           (piece (vector-ref board from))
+           (captured (vector-ref board to))
+           (next-board (chess-copy-board board))
+           ;; update castling rights
+           (next-castling (chess-remove-castling-for-piece castling piece)))
+      ((lambda ()
+         ;; check for castling move (king moves two squares)
+         (cond ((eq piece (quote wk))
+                (cond ((eq from 60)
+                       (cond ((eq to 62) ;; white king-side
+                              (vector-set! next-board 60 chess-empty)
+                              (vector-set! next-board 62 (quote wk))
+                              (vector-set! next-board 61 (vector-ref board 63))
+                              (vector-set! next-board 63 chess-empty))
+                             ((eq to 58) ;; white queen-side
+                              (vector-set! next-board 60 chess-empty)
+                              (vector-set! next-board 58 (quote wk))
+                              (vector-set! next-board 59 (vector-ref board 56))
+                              (vector-set! next-board 56 chess-empty))
+                             (t (vector-set! next-board from chess-empty)
+                                (vector-set! next-board to piece))))
+                      (t (vector-set! next-board from chess-empty)
+                         (vector-set! next-board to piece))))
+               ((eq piece (quote bk))
+                (cond ((eq from 4)
+                       (cond ((eq to 6) ;; black king-side
+                              (vector-set! next-board 4 chess-empty)
+                              (vector-set! next-board 6 (quote bk))
+                              (vector-set! next-board 5 (vector-ref board 7))
+                              (vector-set! next-board 7 chess-empty))
+                             ((eq to 2) ;; black queen-side
+                              (vector-set! next-board 4 chess-empty)
+                              (vector-set! next-board 2 (quote bk))
+                              (vector-set! next-board 3 (vector-ref board 0))
+                              (vector-set! next-board 0 chess-empty))
+                             (t (vector-set! next-board from chess-empty)
+                                (vector-set! next-board to piece))))
+                      (t (vector-set! next-board from chess-empty)
+                         (vector-set! next-board to piece))))
+               ;; en-passant capture
+               ((and (or (eq piece (quote wp)) (eq piece (quote bp)))
+                     (eq to ep))
+                (let ((ep-capture-square (cond ((eq side (quote white)) (- to 8)) (t (+ to 8)))))
+                  (vector-set! next-board from chess-empty)
+                  (vector-set! next-board to piece)
+                  (vector-set! next-board ep-capture-square chess-empty)))
+               ;; rook moved — remove corresponding castling right
+               ((eq piece (quote wr))
+                (vector-set! next-board from chess-empty)
+                (vector-set! next-board to piece)
+                (cond ((eq from 63) (set! next-castling (chess-remove-castling next-castling (quote K))))
+                      ((eq from 56) (set! next-castling (chess-remove-castling next-castling (quote Q))))))
+               ((eq piece (quote br))
+                (vector-set! next-board from chess-empty)
+                (vector-set! next-board to piece)
+                (cond ((eq from 7) (set! next-castling (chess-remove-castling next-castling (quote k))))
+                      ((eq from 0) (set! next-castling (chess-remove-castling next-castling (quote q))))))
+               ;; captured rook — remove its castling right
+               ((eq captured (quote wr))
+                (vector-set! next-board from chess-empty)
+                (vector-set! next-board to piece)
+                (cond ((eq to 63) (set! next-castling (chess-remove-castling next-castling (quote K))))
+                      ((eq to 56) (set! next-castling (chess-remove-castling next-castling (quote Q))))))
+               ((eq captured (quote br))
+                (vector-set! next-board from chess-empty)
+                (vector-set! next-board to piece)
+                (cond ((eq to 7) (set! next-castling (chess-remove-castling next-castling (quote k))))
+                      ((eq to 0) (set! next-castling (chess-remove-castling next-castling (quote q))))))
+               ;; normal move
+               (t (vector-set! next-board from chess-empty)
+                  (vector-set! next-board to piece)))
+
+         ;; update en-passant target
+         (let ((next-ep (cond ((and (or (eq piece (quote wp)) (eq piece (quote bp)))
+                                    (eq (abs (- to from)) 16))
+                               (/ (+ from to) 2))
+                              (t ()))))
+           ;; update halfmove clock
+           (let ((next-halfmove (cond ((or (and (or (eq piece (quote wp)) (eq piece (quote bp)))
+                                            (or (not (eq captured chess-empty))
+                                                (eq (abs (- to from)) 16)))
+                                       (eq captured chess-empty))
+                                      0)
+                                     (t (+ halfmove 1)))))
+             ;; update fullmove number
+             (let ((next-fullmove (cond ((eq side (quote black)) (+ fullmove 1))
+                                        (t fullmove))))
+               (chess-position next-board (chess-opposite side) next-castling next-ep next-halfmove next-fullmove))))))))
 
 (def chess-find-piece-from
   (lambda (board piece index)

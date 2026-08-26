@@ -1,10 +1,11 @@
 use my_lisp::{parse, eval_expr, Session, Value};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
 /// Typed request sent from Tauri command to the worker thread.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum RuntimeRequest {
     Eval { source: String },
     Load { path: String },
@@ -36,7 +37,7 @@ impl ChessRuntime {
             my_lisp_host::install();
 
             // Create session with root environment.
-            let mut session = Session::default();
+    let session = Session::default();
 
             // Try to preload core.my from sibling my-lisp repo.
             let core_paths = [
@@ -139,7 +140,7 @@ pub fn eval_sync(source: String) -> Result<String, String> {
     // For MVP: simple direct evaluation without persistent session.
     // Full actor with response channel comes next iteration.
     my_lisp_host::install();
-    let mut session = Session::default();
+    let session = Session::default();
     let expressions = parse(&source).map_err(|e| e.to_string())?;
     let mut last = Value::Nil;
     for expr in expressions {
