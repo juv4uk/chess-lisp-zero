@@ -23,7 +23,8 @@
 (vector-set! mate-board 49 (quote wq))
 (vector-set! mate-board 42 (quote wk))
 (assert-eq (quote terminal-checkmate)
-  (chess-terminal-state (chess-position mate-board (quote black)))
+  (chess-terminal-state
+    (chess-position mate-board (quote black) (quote ()) (quote ()) 0 1))
   (quote checkmate))
 
 (def stale-board (make-vector 64))
@@ -31,6 +32,7 @@
 (vector-set! stale-board 41 (quote wq))
 (vector-set! stale-board 42 (quote wk))
 (assert-eq (quote terminal-stalemate)
-  (chess-terminal-state (chess-position stale-board (quote black)))
+  (chess-terminal-state
+    (chess-position stale-board (quote black) (quote ()) (quote ()) 0 1))
   (quote stalemate))
 (print (quote CHESS-PERFT-PASS))

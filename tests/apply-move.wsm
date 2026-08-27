@@ -1,0 +1,57 @@
+(load "lib/chess.my")
+
+(def apply-assert
+  (lambda (name actual expected)
+    (cond ((equal? actual expected)
+           (print (list (quote pass) name actual)))
+          (t (print (list (quote fail) name actual expected))))))
+
+; Moving the a1 rook removes only White's queen-side castling right.
+(def rights-position (chess-initial-position))
+(def rights-next (chess-apply-move rights-position (chess-move 0 8)))
+(apply-assert (quote rook-rights)
+  (chess-position-castling rights-next)
+  (quote (K k q)))
+
+; Direct apply-move castling semantics use the repository's a1=0 layout.
+(def castle-board (make-vector 64))
+(vector-set! castle-board 4 (quote wk))
+(vector-set! castle-board 7 (quote wr))
+(vector-set! castle-board 60 (quote bk))
+(def castle-position
+  (chess-position castle-board (quote white) (quote (K)) (quote ()) 0 1))
+(def castle-next (chess-apply-move castle-position (chess-move 4 6)))
+(apply-assert (quote castle-king)
+  (vector-ref (chess-position-board castle-next) 6)
+  (quote wk))
+(apply-assert (quote castle-rook)
+  (vector-ref (chess-position-board castle-next) 5)
+  (quote wr))
+(apply-assert (quote castle-origin-empty)
+  (vector-ref (chess-position-board castle-next) 4)
+  (quote ()))
+(apply-assert (quote castle-rights-cleared)
+  (chess-position-castling castle-next)
+  (quote ()))
+
+; Clocks: quiet non-pawn increments, pawn move resets.
+(def quiet-board (make-vector 64))
+(vector-set! quiet-board 4 (quote wk))
+(vector-set! quiet-board 60 (quote bk))
+(def quiet-position
+  (chess-position quiet-board (quote white) (quote ()) (quote ()) 8 1))
+(apply-assert (quote quiet-halfmove)
+  (chess-position-halfmove
+    (chess-apply-move quiet-position (chess-move 4 5)))
+  9)
+
+(def pawn-board (make-vector 64))
+(vector-set! pawn-board 4 (quote wk))
+(vector-set! pawn-board 60 (quote bk))
+(vector-set! pawn-board 8 (quote wp))
+(def pawn-position
+  (chess-position pawn-board (quote white) (quote ()) (quote ()) 8 1))
+(apply-assert (quote pawn-halfmove-reset)
+  (chess-position-halfmove
+    (chess-apply-move pawn-position (chess-move 8 16)))
+  0)

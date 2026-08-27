@@ -13,11 +13,13 @@
 (vector-set! mate-board 49 (quote wq))
 (vector-set! mate-board 42 (quote wk))
 (print (list (quote terminal-mate)
-  (chess-terminal-state (chess-position mate-board (quote black)))))
+  (chess-terminal-state
+    (chess-position mate-board (quote black) (quote ()) (quote ()) 0 1))))
 
 (def stale-board (make-vector 64))
 (vector-set! stale-board 56 (quote bk))
 (vector-set! stale-board 41 (quote wq))
 (vector-set! stale-board 42 (quote wk))
 (print (list (quote terminal-stalemate)
-  (chess-terminal-state (chess-position stale-board (quote black)))))
+  (chess-terminal-state
+    (chess-position stale-board (quote black) (quote ()) (quote ()) 0 1))))

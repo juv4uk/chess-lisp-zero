@@ -47,9 +47,39 @@
   (lambda (castling piece)
     (cond ((eq piece (quote wk)) (chess-remove-castling (chess-remove-castling castling (quote K)) (quote Q)))
           ((eq piece (quote bk)) (chess-remove-castling (chess-remove-castling castling (quote k)) (quote q)))
-          ((eq piece (quote wr)) (chess-remove-castling castling (quote K)))
-          ((eq piece (quote br)) (chess-remove-castling castling (quote k)))
           (t castling))))
+
+(def chess-remove-castling-for-rook-move
+  (lambda (castling piece from)
+    (cond ((eq piece (quote wr))
+           (cond ((eq from 7) (chess-remove-castling castling (quote K)))
+                 ((eq from 0) (chess-remove-castling castling (quote Q)))
+                 (t castling)))
+          ((eq piece (quote br))
+           (cond ((eq from 63) (chess-remove-castling castling (quote k)))
+                 ((eq from 56) (chess-remove-castling castling (quote q)))
+                 (t castling)))
+          (t castling))))
+
+(def chess-remove-castling-for-rook-capture
+  (lambda (castling captured to)
+    (cond ((eq captured (quote wr))
+           (cond ((eq to 7) (chess-remove-castling castling (quote K)))
+                 ((eq to 0) (chess-remove-castling castling (quote Q)))
+                 (t castling)))
+          ((eq captured (quote br))
+           (cond ((eq to 63) (chess-remove-castling castling (quote k)))
+                 ((eq to 56) (chess-remove-castling castling (quote q)))
+                 (t castling)))
+          (t castling))))
+
+(def chess-castling-after-move
+  (lambda (castling piece from captured to)
+    (let* ((after-piece (chess-remove-castling-for-piece castling piece))
+           (after-rook-move
+             (chess-remove-castling-for-rook-move after-piece piece from)))
+      (chess-remove-castling-for-rook-capture
+        after-rook-move captured to))))
 
 (def chess-opposite
   (lambda (side)
@@ -78,6 +108,12 @@
 (def chess-enemy-piece?
   (lambda (side piece)
     (chess-own-piece? (chess-opposite side) piece)))
+
+(def chess-pawn?
+  (lambda (piece)
+    (cond ((eq piece (quote wp)) t)
+          ((eq piece (quote bp)) t)
+          (t (quote ())))))
 
 (def chess-file (lambda (square) (mod square 8)))
 (def chess-rank (lambda (square) (quotient square 8)))
@@ -167,7 +203,7 @@
                                   (chess-parse-fen-board (cdr chars) (+ index 1) board))))))
                      (t ((lambda ()
                            (vector-set! board index (chess-piece-from-char c))
-                           (chess-parse-fen-board (cdr chars) (+ index 1) board)))))))))
+                           (chess-parse-fen-board (cdr chars) (+ index 1) board))))))))))
 
 (def chess-add-target
   (lambda (board side from file rank moves)
@@ -324,91 +360,97 @@
            (piece (vector-ref board from))
            (captured (vector-ref board to))
            (next-board (chess-copy-board board))
-           ;; update castling rights
-           (next-castling (chess-remove-castling-for-piece castling piece)))
+           (next-castling
+             (chess-castling-after-move castling piece from captured to)))
       ((lambda ()
          ;; check for castling move (king moves two squares)
          (cond ((eq piece (quote wk))
-                (cond ((eq from 60)
-                       (cond ((eq to 62) ;; white king-side
-                              (vector-set! next-board 60 chess-empty)
-                              (vector-set! next-board 62 (quote wk))
-                              (vector-set! next-board 61 (vector-ref board 63))
-                              (vector-set! next-board 63 chess-empty))
-                             ((eq to 58) ;; white queen-side
-                              (vector-set! next-board 60 chess-empty)
-                              (vector-set! next-board 58 (quote wk))
-                              (vector-set! next-board 59 (vector-ref board 56))
-                              (vector-set! next-board 56 chess-empty))
-                             (t (vector-set! next-board from chess-empty)
-                                (vector-set! next-board to piece))))
-                      (t (vector-set! next-board from chess-empty)
-                         (vector-set! next-board to piece))))
-               ((eq piece (quote bk))
                 (cond ((eq from 4)
-                       (cond ((eq to 6) ;; black king-side
-                              (vector-set! next-board 4 chess-empty)
-                              (vector-set! next-board 6 (quote bk))
-                              (vector-set! next-board 5 (vector-ref board 7))
-                              (vector-set! next-board 7 chess-empty))
-                             ((eq to 2) ;; black queen-side
-                              (vector-set! next-board 4 chess-empty)
-                              (vector-set! next-board 2 (quote bk))
-                              (vector-set! next-board 3 (vector-ref board 0))
-                              (vector-set! next-board 0 chess-empty))
-                             (t (vector-set! next-board from chess-empty)
-                                (vector-set! next-board to piece))))
-                      (t (vector-set! next-board from chess-empty)
-                         (vector-set! next-board to piece))))
+                       (cond ((eq to 6) ;; white king-side
+                              ((lambda ()
+                                 (vector-set! next-board 4 chess-empty)
+                                 (vector-set! next-board 6 (quote wk))
+                                 (vector-set! next-board 5 (vector-ref board 7))
+                                 (vector-set! next-board 7 chess-empty))))
+                             ((eq to 2) ;; white queen-side
+                              ((lambda ()
+                                 (vector-set! next-board 4 chess-empty)
+                                 (vector-set! next-board 2 (quote wk))
+                                 (vector-set! next-board 3 (vector-ref board 0))
+                                 (vector-set! next-board 0 chess-empty))))
+                             (t ((lambda ()
+                                   (vector-set! next-board from chess-empty)
+                                   (vector-set! next-board to piece))))))
+                      (t ((lambda ()
+                            (vector-set! next-board from chess-empty)
+                            (vector-set! next-board to piece))))))
+               ((eq piece (quote bk))
+                (cond ((eq from 60)
+                       (cond ((eq to 62) ;; black king-side
+                              ((lambda ()
+                                 (vector-set! next-board 60 chess-empty)
+                                 (vector-set! next-board 62 (quote bk))
+                                 (vector-set! next-board 61 (vector-ref board 63))
+                                 (vector-set! next-board 63 chess-empty))))
+                             ((eq to 58) ;; black queen-side
+                              ((lambda ()
+                                 (vector-set! next-board 60 chess-empty)
+                                 (vector-set! next-board 58 (quote bk))
+                                 (vector-set! next-board 59 (vector-ref board 56))
+                                 (vector-set! next-board 56 chess-empty))))
+                             (t ((lambda ()
+                                   (vector-set! next-board from chess-empty)
+                                   (vector-set! next-board to piece))))))
+                      (t ((lambda ()
+                            (vector-set! next-board from chess-empty)
+                            (vector-set! next-board to piece))))))
                ;; en-passant capture
-               ((and (or (eq piece (quote wp)) (eq piece (quote bp)))
-                     (eq to ep))
+               ((chess-pawn? piece)
+                (cond ((eq to ep)
                 (let ((ep-capture-square (cond ((eq side (quote white)) (- to 8)) (t (+ to 8)))))
-                  (vector-set! next-board from chess-empty)
-                  (vector-set! next-board to piece)
-                  (vector-set! next-board ep-capture-square chess-empty)))
+                  ((lambda ()
+                     (vector-set! next-board from chess-empty)
+                     (vector-set! next-board to piece)
+                     (vector-set! next-board ep-capture-square chess-empty)))))
+                      (t ((lambda ()
+                            (vector-set! next-board from chess-empty)
+                            (vector-set! next-board to piece))))))
                ;; rook moved — remove corresponding castling right
                ((eq piece (quote wr))
-                (vector-set! next-board from chess-empty)
-                (vector-set! next-board to piece)
-                (cond ((eq from 63) (set! next-castling (chess-remove-castling next-castling (quote K))))
-                      ((eq from 56) (set! next-castling (chess-remove-castling next-castling (quote Q))))))
+                ((lambda ()
+                   (vector-set! next-board from chess-empty)
+                   (vector-set! next-board to piece))))
                ((eq piece (quote br))
-                (vector-set! next-board from chess-empty)
-                (vector-set! next-board to piece)
-                (cond ((eq from 7) (set! next-castling (chess-remove-castling next-castling (quote k))))
-                      ((eq from 0) (set! next-castling (chess-remove-castling next-castling (quote q))))))
+                ((lambda ()
+                   (vector-set! next-board from chess-empty)
+                   (vector-set! next-board to piece))))
                ;; captured rook — remove its castling right
                ((eq captured (quote wr))
-                (vector-set! next-board from chess-empty)
-                (vector-set! next-board to piece)
-                (cond ((eq to 63) (set! next-castling (chess-remove-castling next-castling (quote K))))
-                      ((eq to 56) (set! next-castling (chess-remove-castling next-castling (quote Q))))))
+                ((lambda ()
+                   (vector-set! next-board from chess-empty)
+                   (vector-set! next-board to piece))))
                ((eq captured (quote br))
-                (vector-set! next-board from chess-empty)
-                (vector-set! next-board to piece)
-                (cond ((eq to 7) (set! next-castling (chess-remove-castling next-castling (quote k))))
-                      ((eq to 0) (set! next-castling (chess-remove-castling next-castling (quote q))))))
+                ((lambda ()
+                   (vector-set! next-board from chess-empty)
+                   (vector-set! next-board to piece))))
                ;; normal move
-               (t (vector-set! next-board from chess-empty)
-                  (vector-set! next-board to piece)))
+               (t ((lambda ()
+                     (vector-set! next-board from chess-empty)
+                     (vector-set! next-board to piece)))))
 
          ;; update en-passant target
-         (let ((next-ep (cond ((and (or (eq piece (quote wp)) (eq piece (quote bp)))
-                                    (eq (abs (- to from)) 16))
-                               (/ (+ from to) 2))
-                              (t ()))))
+         (let ((next-ep (cond ((chess-pawn? piece)
+                               (cond ((eq (abs (- to from)) 16) (/ (+ from to) 2))
+                                     (t (quote ()))))
+                              (t (quote ())))))
            ;; update halfmove clock
-           (let ((next-halfmove (cond ((or (and (or (eq piece (quote wp)) (eq piece (quote bp)))
-                                            (or (not (eq captured chess-empty))
-                                                (eq (abs (- to from)) 16)))
-                                       (eq captured chess-empty))
-                                      0)
+           (let ((next-halfmove (cond ((chess-pawn? piece) 0)
+                                     ((not (eq captured chess-empty)) 0)
                                      (t (+ halfmove 1)))))
              ;; update fullmove number
              (let ((next-fullmove (cond ((eq side (quote black)) (+ fullmove 1))
                                         (t fullmove))))
-               (chess-position next-board (chess-opposite side) next-castling next-ep next-halfmove next-fullmove))))))))
+               (chess-position next-board (chess-opposite side) next-castling next-ep next-halfmove next-fullmove)))))))))
 
 (def chess-find-piece-from
   (lambda (board piece index)
@@ -511,27 +553,17 @@
              (quote checkmate))
             (t (quote stalemate))))))
 
-(def chess-perft-pseudo
-  (lambda (board side moves depth total)
+(def chess-perft-moves
+  (lambda (position moves depth total)
     (cond ((atom moves) total)
-          (t (let* ((move (car moves))
-                    (captured (chess-do-move! board move)))
-               (cond ((chess-in-check? board side)
-                      ((lambda ()
-                         (chess-undo-move! board move captured)
-                         (chess-perft-pseudo board side (cdr moves) depth total))))
-                     (t (let ((nodes (chess-perft
-                                      (chess-position board (chess-opposite side))
-                                      (- depth 1))))
-                          ((lambda ()
-                             (chess-undo-move! board move captured)
-                             (chess-perft-pseudo board side (cdr moves) depth
-                               (+ total nodes))))))))))))
+          (t (let ((nodes (chess-perft
+                            (chess-apply-move position (car moves))
+                            (- depth 1))))
+               (chess-perft-moves position (cdr moves) depth
+                 (+ total nodes)))))))
 
 (def chess-perft
   (lambda (position depth)
     (cond ((eq depth 0) 1)
-          (t (let ((board (chess-position-board position))
-                   (side (chess-position-side position)))
-               (chess-perft-pseudo board side
-                 (chess-pseudo-moves position) depth 0))))))
+          (t (chess-perft-moves position
+               (chess-legal-moves position) depth 0)))))
