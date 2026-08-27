@@ -118,4 +118,13 @@
     (origin . chess-lisp-zero)
     (description . "CANCELLED by owner decision 2026-08-27: no third-party teacher network, weights, corpora or chess-tauri-zero oracle. Historical task id retained for auditability; replacement direction is an original model trained only on project-generated self-play data after the policy-plane contract is ratified.")
     (done . t)))
+
+  ("CHESS-LISP-ZERO-DEPENDENCY-LICENSE-GATE" . (
+    (priority . 9.0)
+    (capabilities . (licensing rust tooling ci evidence))
+    (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE))
+    (origin . chess-lisp-zero)
+    (description . "Implement a deterministic dependency-license inventory and fail-closed gate for the Tauri/Rust dependency graph. Reject unknown and non-approved license expressions; distinguish package infrastructure from original product code/data/assets. Produce a committed machine-readable policy plus human-readable report, using existing local Cargo metadata and no new runtime dependency.")
+    (done . ())
+  ))
 )))
