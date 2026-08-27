@@ -21,7 +21,10 @@
   звичайних псевдолегальних ходів, фільтр безпеки короля, чисте застосування
   ходу, `checkmate`/`stalemate` та детермінований `perft`;
 - `tests/perft-quick.my` — короткий тест для навантаженого середовища;
-- `tests/perft.my` — повний fixture з очікуваннями 20/400/8902.
+- `tests/perft.my` — повний fixture з очікуваннями 20/400/8902;
+- `lib/evaluation.wsm` — детермінована material evaluation;
+- `lib/search.wsm` — depth-limited minimax correctness baseline без заяви
+  про силу гри.
 
 Перевірений зараз доказ:
 
@@ -31,17 +34,25 @@ perft(1) = 20
 perft(2) = 400
 checkmate fixture = checkmate
 stalemate fixture = stalemate
-search mutation restores the original board
+persistent perft preserves the original board
+best capture at depth 1 = (8 16), score = 500
+checkmated-side search score = -100000
+castling/apply-move fixtures = PASS
 ```
 
 `perft(3) = 8902` записано як acceptance fixture, але його виконання лишається
-окремим gate через поточне системне навантаження. Рокіровка, en passant і
-promotion ще не входять у перший зріз; стартовий perft 1..3 їх не активує.
+окремим gate через поточне системне навантаження. `apply-move` уже має
+виконувані fixtures для рокіровки, прав рокіровки й clocks, але генерація
+рокіровки/en passant та promotion ще не входять у завершений зріз;
+стартовий perft 1..3 їх не активує.
 
 Запуск із checkout `chess-lisp-zero`:
 
 ```bash
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft-quick.my
+/home/agents/GitHub/my-lisp/target/release/my-lisp tests/apply-move.wsm
+/home/agents/GitHub/my-lisp/target/release/my-lisp tests/evaluation.wsm
+/home/agents/GitHub/my-lisp/target/release/my-lisp tests/search.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft.my
 ```
 
