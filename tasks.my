@@ -18,7 +18,7 @@
     (capabilities . (tauri rust frontend))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE))
     (origin . chess-lisp-zero)
-    (description . "Create a minimal buildable Tauri v2 shell and an original chess-board UI. Do not copy or adapt chess-tauri-zero UI/source/assets, Python sidecars or binaries. Tauri/Rust dependencies are infrastructure and require a generated dependency-license inventory before distributable release. Prove targeted Linux structure/build checks; Windows stays CI evidence.")))
+    (description . "Create a minimal buildable Tauri v2 shell and chess-board UI using only license-cleared components. Preserve chess-tauri-zero's rendering and busy-state lessons, but do not import its Python sidecar or binaries. Prove targeted Linux structure/build checks; Windows stays CI evidence.")))
 
   ("CHESS-LISP-ZERO-EMBEDDED-MYLISP-ACTOR" . (
     (priority . 9.0)
@@ -32,14 +32,14 @@
     (capabilities . (testing evidence my-lisp chess))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
-    (description . "Historical task id retained for dependency-graph stability; chess.js is forbidden. Build an original FEN/legal-move/perft gate and compare its outputs only with individually cited public numerical facts. Do not copy external code, fixture tables or divide files. Record independently authored fixture, expected fact citation, actual result and commit SHA.")))
+    (description . "Build a normalized FEN/legal-move/perft differential gate between the my-lisp chess library and published perft reference data (chess-programming-wiki standard test positions -- starting position, Kiwipete, position 3, etc.). Owner decision 2026-08-27: no chess.js, not even as an out-of-tree witness (tools/witness-chessjs.mjs removed) -- published counts/divide breakdowns are public facts, not third-party code, and need no license/NOTICE entry. Source the reference numbers from the published tables directly (do not hand-transcribe from memory); record exact fixture, expected/actual, source citation and commit SHAs. Name retained for dependency-graph stability even though the witness is no longer chess.js.")))
 
   ("CHESS-LISP-ZERO-UCI-ADAPTER" . (
     (priority . 6.0)
     (capabilities . (my-lisp chess protocol testing))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
-    (description . "Implement an original optional UCI adapter around the my-lisp chess engine for protocol compatibility. Keep the internal Tauri API typed; do not copy another engine's adapter or use chess-tauri-zero as an oracle.")))
+    (description . "Add an optional UCI adapter around the my-lisp chess engine for compatibility and differential comparison with chess-tauri-zero. Keep the internal Tauri API typed; UCI is an external adapter, not the in-process authority.")))
 
   ("CHESS-LISP-ZERO-CPU-BASELINE-PROFILE" . (
     (priority . 7.0)
@@ -102,7 +102,7 @@
     (capabilities . (chess my-lisp machine-learning testing evidence))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-FULL-RULES-FEN))
     (origin . chess-lisp-zero)
-    (description . "Design an original implementation-independent chess ML boundary: explicitly justified board planes, side-to-move normalization, castling/en-passant representation and deterministic policy indexing. Do not copy the historical 18-plane/1968-label tables. Require independently authored round-trip fixtures before implementation.")))
+    (description . "Ratify an implementation-independent chess ML boundary: canonical 18x8x8 input planes, side-to-move normalization, castling/en-passant planes, deterministic 1968 UCI policy labels, promotion labels and policy flipping. Derive fixtures from license-cleared evidence and require round-trip/differential checks; do not make historical Python code authoritative.")))
 
   ("CHESS-LISP-ZERO-MYLISP-PUCT-MCTS" . (
     (priority . 8.0)
@@ -116,6 +116,5 @@
     (capabilities . (python pytorch chess machine-learning provenance evidence))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
-    (description . "CANCELLED by owner decision 2026-08-27: no third-party teacher network, weights, corpora or chess-tauri-zero oracle. Historical task id retained for auditability; replacement direction is an original model trained only on project-generated self-play data after the policy-plane contract is ratified.")
-    (done . t)))
+    (description . "Define a process boundary that uses the existing chess-tauri-zero PyTorch policy/value network as an optional teacher/oracle for normalized fixtures. Verify model/config/weight provenance, exact input/output contracts and deterministic recorded responses. PyTorch remains replaceable and must not become chess-rule authority or an implicit dependency of the my-lisp semantic core.")))
 )))
