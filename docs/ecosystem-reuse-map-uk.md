@@ -6,6 +6,12 @@
 
 **Автор огляду:** Viveka (`wsl-viveka-1`)
 
+> **SUPERSEDED FOR THIRD-PARTY REUSE:** карта збережена як історичний аудит
+> уже наявних можливостей. Вона більше не дозволяє адаптацію
+> `chess-tauri-zero`, PyTorch models, weights, corpora або стороннього UI.
+> Активний original-work план:
+> [`ORIGINAL-WORK-LICENSE-PLAN.md`](ORIGINAL-WORK-LICENSE-PLAN.md).
+
 ## Висновок
 
 `chess-lisp-zero` не є новим шаховим рушієм з нуля. Це місце, де вже

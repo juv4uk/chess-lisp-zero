@@ -12,6 +12,11 @@
 публічних perft-даних (chess-programming-wiki). Деталі: `NOTICE-third-party.md`,
 задача `CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL` у `tasks.my`.
 
+> **SUPERSEDED:** активний план більше не передбачає адаптацію жодного
+> стороннього шахового коду, UI, teacher-моделі, ваг або корпусів. Цей файл
+> збережено як історію дослідження. Чинне рішення:
+> [`ORIGINAL-WORK-LICENSE-PLAN.md`](ORIGINAL-WORK-LICENSE-PLAN.md).
+
 ## 1. Мета
 
 `chess-lisp-zero` — не спроба негайно наздогнати Stockfish або відтворити
