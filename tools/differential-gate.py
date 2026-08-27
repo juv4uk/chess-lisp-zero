@@ -39,17 +39,35 @@ PIECES = {"P": "wp", "N": "wn", "B": "wb", "R": "wr", "Q": "wq",
           "q": "bq", "k": "bk"}
 
 
-def fen_board_to_datum(board_field):
-    """FEN piece-placement -> quoted lisp datum tokens."""
-    tokens = []
-    for ch in board_field:
-        if ch == "/":
-            continue
-        if ch.isdigit():
-            tokens.append(str(int(ch)))
-        else:
-            tokens.append(PIECES[ch])
-    return "(quote (" + " ".join(tokens) + "))"
+def build_position_expr(fen):
+    """Build a my-lisp position expression from a FEN string.
+
+    chess.my has no chess-fen->position function in this HEAD. Materialize
+    the 64-square board directly in chess.my's a1-first indexing order;
+    this keeps the differential gate independent of the incomplete FEN
+    character parser while FULL-RULES-FEN owns that separate surface.
+    """
+    parts = fen.split()
+    board_field = parts[0]
+    side = "white" if parts[1] == "w" else "black"
+    pieces = []
+    # FEN lists rank 8 first; chess.my indexes a1=0, so materialize ranks in
+    # reverse order and bypass the currently incomplete character parser.
+    for rank in reversed(board_field.split("/")):
+        for char in rank:
+            if char.isdigit():
+                pieces.extend(["()"] * int(char))
+            else:
+                pieces.append(PIECES[char])
+    if len(pieces) != 64:
+        raise ValueError(f"FEN board expands to {len(pieces)} squares, not 64")
+    board = "(chess-board-from-list (quote (" + " ".join(pieces) + ")))"
+    return (
+        "(def pos (chess-position "
+        f"{board} "
+        f"(quote {side}) (quote (K Q k q)) (quote ()) 0 1)) "
+        "(chess-legal-moves pos)"
+    )
 
 
 class Oracle:
@@ -111,21 +129,18 @@ def main():
     cases = [c for c in witness["results"] if "error" not in c]
 
     oracle = Oracle()
-    setup = ('(load "/home/agents/GitHub/chess-lisp-zero/lib/chess.my")')
+    # Load bootstrap library first (provides list, let*, not, second, mod,
+    # quotient, length, etc. -- none of which are my-lisp core builtins).
+    setup = (
+        '(load "/home/agents/GitHub/my-lisp/racket/boot/core.my") '
+        '(load "/home/agents/GitHub/chess-lisp-zero/lib/chess.my")'
+    )
     status, _ = parse_response(oracle.request(setup))
     assert status == "ok", f"oracle load failed: {setup}"
 
     results = []
     for case in cases:
-        parts = case["fen"].split()
-        board_datum = fen_board_to_datum(parts[0])
-        side = "white" if parts[1] == "w" else "black"
-        prog = (
-            "(def pos (chess-position "
-            f"(chess-parse-fen-board {board_datum} 0 (make-vector 64)) "
-            f"(quote {side}))) "
-            "(chess-legal-moves pos)"
-        )
+        prog = build_position_expr(case["fen"])
         resp = oracle.request(prog)
         status, value = parse_response(resp)
         rec = {"id": case["id"], "fen": case["fen"]}
@@ -153,10 +168,10 @@ def main():
     failed = [r for r in results if not r.get("match")]
 
     lines = [
-        "# Differential gate evidence — my-lisp chess vs chess.js witness",
+        "# Differential gate evidence — my-lisp chess vs published perft witness",
         "",
         f"- **Generated:** {datetime.now(timezone.utc).isoformat()}",
-        "- **Status:** EXECUTED (both sides ran live this session)",
+        "- **Status:** EXECUTED (my-lisp ran live; witness is a static published fixture)",
         "",
         "## Provenance",
         "",
@@ -166,10 +181,10 @@ def main():
         f"| chess-lisp-zero HEAD | `{git_info(repo, ['rev-parse', 'HEAD'])}` |",
         f"| witness vendor sha256 | `{witness['witness']['vendor_sha256']}` |",
         f"| witness role | {witness['witness']['role']} |",
-        f"| node version | {witness['witness']['node_version']} |",
+        f"| witness runtime | {witness['witness']['node_version']} |",
         "| oracle | 127.0.0.1:9999 semantic eval |",
         "| normalization | move → from*64+to, sorted int list |",
-        "| surface scope | no castling / en-passant / promotion (rights-stripped positions) |",
+        "| surface scope | fixtures whose depth-1 moves require no castling / en-passant / promotion |",
         "",
         "## Results",
         "",
