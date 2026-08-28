@@ -2,8 +2,10 @@
 
 ## Current status
 
-As of the initial MVP commit, this repository contains **no third-party code,
-data, model weights, or game corpora**.
+This repository contains **no vendored third-party code, data, model weights,
+or game corpora**. The optional training backend uses PyTorch as a replaceable
+runtime dependency; PyTorch is distributed under its BSD-style license and is
+not copied into this repository.
 
 All source files in `src-tauri/`, `src/`, `lib/`, and `tests/` are original
 work authored for this project.

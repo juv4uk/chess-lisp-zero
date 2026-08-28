@@ -143,6 +143,7 @@ Measured on 2026-08-28 from the actual WSL machine:
 | VRAM | 4096 MiB |
 | CUDA capability | 6.1 (Pascal, no Tensor Cores) |
 | Driver / toolkit | 582.66 / CUDA 12.1 |
+| Verified PyTorch runtime | 2.8.0+cu126, real `sm_61` GPU matmul PASS |
 
 This changes the first network from an aspirational large AlphaZero clone to
 a measured compact family:
@@ -186,6 +187,7 @@ semantic authority.
 | 18×8×8 planes + 1968 policy vocabulary | EXECUTED | `tests/neural-contract.wsm` |
 | Deterministic single-threaded PUCT | EXECUTED | `lib/puct.wsm`, `tests/puct.wsm` |
 | PUCT policy → `(planes, sparse pi, side, z)` records | EXECUTED | `lib/self-play.wsm`, `tests/self-play.wsm` |
+| Seeded PyTorch train step + strict checkpoint/reload | EXECUTED | `training/from_zero_torch.py`, `tests/test_from_zero_torch.py` |
 | Fixed-tree selection and alternating backup | EXECUTED | deterministic fixtures |
 | Authoritative chess expansion | EXECUTED | 20-child initial-position fixture |
 | Injectable evaluator | EXECUTED | material evaluator selects forced queen capture |

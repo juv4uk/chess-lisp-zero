@@ -14,6 +14,8 @@ on:
       - 'tests/neural-contract.wsm'
       - 'tests/puct.wsm'
       - 'tests/self-play.wsm'
+      - 'training/**'
+      - 'tests/test_from_zero_torch.py'
       - 'docs/NEURAL-NETWORK-ROADMAP.md'
       - 'src/chess-api.mjs'
       - 'tools/wasm-chess-smoke.mjs'
@@ -53,6 +55,11 @@ jobs:
 
       - name: Run from-zero self-play record contract
         run: my-lisp/target/release/my-lisp tests/self-play.wsm
+
+      - name: Run bounded from-zero PyTorch checkpoint smoke
+        run: |
+          python3 -m pip install --disable-pip-version-check torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+          PYTHONPATH=. python3 tests/test_from_zero_torch.py
 
       - name: Build canonical WASM adapter
         run: wasm-pack build my-lisp/crates/my-lisp-wasm --target nodejs --out-dir "$GITHUB_WORKSPACE/wasm-pkg"
