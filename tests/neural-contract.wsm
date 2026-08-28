@@ -40,6 +40,15 @@
 (neural-assert (quote first-promotion-label)
   (eq (nth 1792 policy-labels) "a2a1q"))
 
+(def white-knight-index
+  (chess-policy-move-index initial (chess-move 1 16)))
+(def black-knight-index
+  (chess-policy-move-index black-position (chess-move 57 40)))
+(neural-assert (quote policy-index-in-range)
+  (and (>= white-knight-index 0) (< white-knight-index 1968)))
+(neural-assert (quote black-policy-normalizes-to-own-view)
+  (= black-knight-index white-knight-index))
+
 (def flip-fixture (chess-promotion-move 48 56 (quote q)))
 (neural-assert (quote policy-flip-involution)
   (equal? (chess-policy-flip-move (chess-policy-flip-move flip-fixture))

@@ -164,6 +164,31 @@
     (append (chess-policy-base-labels-from 0 (quote ()))
       (chess-policy-promotion-labels-from 0 (quote ())))))
 
+(def chess-policy-label-index-from
+  (lambda (labels wanted index)
+    (cond ((atom labels) -1)
+          ((eq (car labels) wanted) index)
+          (t (chess-policy-label-index-from
+               (cdr labels) wanted (+ index 1))))))
+
+(def chess-policy-move-label
+  (lambda (position move)
+    (let ((normalized
+            (cond ((eq (chess-position-side position) (quote white)) move)
+                  (t (chess-policy-flip-move move)))))
+      (chess-policy-label (chess-move-from normalized)
+        (chess-move-to normalized) (chess-move-promotion normalized)))))
+
+(def chess-policy-move-index
+  (lambda (position move)
+    (chess-policy-label-index-from (chess-policy-labels)
+      (chess-policy-move-label position move) 0)))
+
+(def chess-policy-move-index-in
+  (lambda (labels position move)
+    (chess-policy-label-index-from labels
+      (chess-policy-move-label position move) 0)))
+
 (def chess-policy-flip-square
   (lambda (square)
     (chess-square (chess-file square) (- 7 (chess-rank square)))))
@@ -177,4 +202,3 @@
                (chess-policy-flip-square (chess-move-from move))
                (chess-policy-flip-square (chess-move-to move))
                (chess-move-promotion move))))))
-

@@ -1,0 +1,58 @@
+(load "lib/chess.my")
+(load "lib/fen.wsm")
+(load "lib/neural-contract.wsm")
+(load "lib/evaluation.wsm")
+(load "lib/puct.wsm")
+(load "lib/self-play.wsm")
+
+(def self-play-assert
+  (lambda (name condition)
+    (cond (condition (print (list name (quote PASS))))
+          (t (error (string-append "self-play contract failed: "
+                     (symbol->string name)))))))
+
+(def self-play-policy-sum
+  (lambda (policy total)
+    (cond ((atom policy) total)
+          (t (self-play-policy-sum (cdr policy) (+ total (second (car policy))))))))
+
+(def initial (chess-initial-position))
+(def root (puct-node initial chess-empty 1))
+(def child-a (puct-node initial (chess-move 1 16) (/ 1 2)))
+(def child-b (puct-node initial (chess-move 1 18) (/ 1 2)))
+(vector-set! child-a puct-visits-field 3)
+(vector-set! child-b puct-visits-field 1)
+(vector-set! root puct-children-field (list child-a child-b))
+(def example (self-play-example-from-root initial root 1))
+
+(self-play-assert (quote planes-size)
+  (= (vector-length (vector-ref example self-play-planes-field)) 1152))
+(self-play-assert (quote legal-policy-size)
+  (= (length (vector-ref example self-play-policy-field)) 2))
+(self-play-assert (quote policy-normalized)
+  (= (self-play-policy-sum
+       (vector-ref example self-play-policy-field) 0) 1))
+(self-play-assert (quote first-index-in-vocabulary)
+  (let ((index (car (car (vector-ref example self-play-policy-field)))))
+    (and (>= index 0) (< index 1968))))
+(self-play-assert (quote outcome-unset-before-terminal)
+  (eq (vector-ref example self-play-outcome-field) chess-empty))
+
+(def black-example
+  (self-play-record
+    (chess-position (chess-position-board initial) (quote black)
+      (chess-position-castling initial) chess-empty 0 1)
+    (quote ())))
+(def records (list example black-example))
+(self-play-finalize! records (quote white))
+(self-play-assert (quote white-win-target)
+  (= (vector-ref example self-play-outcome-field) 1))
+(self-play-assert (quote black-loss-target)
+  (= (vector-ref black-example self-play-outcome-field) -1))
+(self-play-finalize! records (quote draw))
+(self-play-assert (quote draw-target-white)
+  (= (vector-ref example self-play-outcome-field) 0))
+(self-play-assert (quote draw-target-black)
+  (= (vector-ref black-example self-play-outcome-field) 0))
+
+(print (quote CHESS-SELF-PLAY-CONTRACT-PASS))

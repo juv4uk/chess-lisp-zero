@@ -8,6 +8,13 @@ on:
       - 'lib/chess.my'
       - 'lib/fen.wsm'
       - 'lib/wasm-api.wsm'
+      - 'lib/neural-contract.wsm'
+      - 'lib/puct.wsm'
+      - 'lib/self-play.wsm'
+      - 'tests/neural-contract.wsm'
+      - 'tests/puct.wsm'
+      - 'tests/self-play.wsm'
+      - 'docs/NEURAL-NETWORK-ROADMAP.md'
       - 'src/chess-api.mjs'
       - 'tools/wasm-chess-smoke.mjs'
       - '.github/workflows/wasm-chess-api.yml'
@@ -43,6 +50,9 @@ jobs:
 
       - name: Run deterministic PUCT reference
         run: my-lisp/target/release/my-lisp tests/puct.wsm
+
+      - name: Run from-zero self-play record contract
+        run: my-lisp/target/release/my-lisp tests/self-play.wsm
 
       - name: Build canonical WASM adapter
         run: wasm-pack build my-lisp/crates/my-lisp-wasm --target nodejs --out-dir "$GITHUB_WORKSPACE/wasm-pkg"

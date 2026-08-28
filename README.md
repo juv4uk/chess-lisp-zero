@@ -100,3 +100,6 @@ planes і детермінований policy vocabulary із 1968 UCI labels.
 `lib/puct.wsm` додає детермінований однопотоковий PUCT reference з
 авторитетним chess expansion, alternating backup, temperature 0/1 та
 підмінним evaluator; це correctness baseline, а не твердження про силу гри.
+`lib/self-play.wsm` перетворює PUCT visit policy на канонічні індекси
+`0..1967`, зберігає `(planes, sparse pi, side, z)` і проставляє outcome після
+завершення партії. Це виконуваний data-boundary, ще не повний training loop.

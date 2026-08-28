@@ -185,6 +185,7 @@ semantic authority.
 |---|---|---|
 | 18×8×8 planes + 1968 policy vocabulary | EXECUTED | `tests/neural-contract.wsm` |
 | Deterministic single-threaded PUCT | EXECUTED | `lib/puct.wsm`, `tests/puct.wsm` |
+| PUCT policy → `(planes, sparse pi, side, z)` records | EXECUTED | `lib/self-play.wsm`, `tests/self-play.wsm` |
 | Fixed-tree selection and alternating backup | EXECUTED | deterministic fixtures |
 | Authoritative chess expansion | EXECUTED | 20-child initial-position fixture |
 | Injectable evaluator | EXECUTED | material evaluator selects forced queen capture |

@@ -1,0 +1,55 @@
+; Training-example boundary for independent from-zero self-play.
+; Records contain only WSM-authoritative chess state and PUCT visit targets.
+
+(def self-play-planes-field 0)
+(def self-play-policy-field 1)
+(def self-play-side-field 2)
+(def self-play-outcome-field 3)
+
+(def self-play-record
+  (lambda (position policy)
+    (let ((record (make-vector 4)))
+      ((lambda ()
+        (vector-set! record self-play-planes-field
+          (chess-neural-position-planes position))
+        (vector-set! record self-play-policy-field policy)
+        (vector-set! record self-play-side-field (chess-position-side position))
+        (vector-set! record self-play-outcome-field chess-empty)
+        record)))))
+
+(def self-play-index-policy-from
+  (lambda (labels position sparse accepted)
+    (cond ((atom sparse) (reverse accepted))
+          (t (let* ((entry (car sparse))
+                    (move (car entry))
+                    (probability (second entry))
+                    (index (chess-policy-move-index-in labels position move)))
+               (cond ((< index 0)
+                      (error "legal move is absent from policy vocabulary"))
+                     (t (self-play-index-policy-from labels position (cdr sparse)
+                          (cons (list index probability) accepted)))))))))
+
+(def self-play-index-policy
+  (lambda (position sparse)
+    (self-play-index-policy-from (chess-policy-labels)
+      position sparse (quote ()))))
+
+(def self-play-example-from-root
+  (lambda (position root temperature)
+    (self-play-record position
+      (self-play-index-policy position (puct-policy root temperature)))))
+
+(def self-play-outcome-for-side
+  (lambda (side winner)
+    (cond ((eq winner (quote draw)) 0)
+          ((eq side winner) 1)
+          (t -1))))
+
+(def self-play-finalize!
+  (lambda (records winner)
+    (cond ((atom records) records)
+          (t ((lambda ()
+                (vector-set! (car records) self-play-outcome-field
+                  (self-play-outcome-for-side
+                    (vector-ref (car records) self-play-side-field) winner))
+                (self-play-finalize! (cdr records) winner)))))))
