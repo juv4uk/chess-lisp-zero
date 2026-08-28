@@ -38,6 +38,9 @@ jobs:
       - name: Run native chess API fixture
         run: my-lisp/target/release/my-lisp tests/wasm-api.wsm
 
+      - name: Run neural input and policy contract
+        run: my-lisp/target/release/my-lisp tests/neural-contract.wsm
+
       - name: Build canonical WASM adapter
         run: wasm-pack build my-lisp/crates/my-lisp-wasm --target nodejs --out-dir "$GITHUB_WORKSPACE/wasm-pkg"
 

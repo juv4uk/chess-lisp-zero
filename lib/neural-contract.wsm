@@ -1,0 +1,180 @@
+; Canonical chess ML boundary v0.1.
+; Depends on lib/chess.my and lib/fen.wsm.
+
+(def chess-neural-plane-count 18)
+(def chess-neural-plane-size 64)
+(def chess-neural-input-size 1152)
+
+(def chess-neural-abs
+  (lambda (n) (cond ((< n 0) (- 0 n)) (t n))))
+
+(def chess-neural-normalize-square
+  (lambda (side square)
+    (cond ((eq side (quote white)) square)
+          (t (chess-square (chess-file square) (- 7 (chess-rank square)))))))
+
+(def chess-neural-piece-kind
+  (lambda (piece)
+    (cond ((or (eq piece (quote wp)) (eq piece (quote bp))) 0)
+          ((or (eq piece (quote wn)) (eq piece (quote bn))) 1)
+          ((or (eq piece (quote wb)) (eq piece (quote bb))) 2)
+          ((or (eq piece (quote wr)) (eq piece (quote br))) 3)
+          ((or (eq piece (quote wq)) (eq piece (quote bq))) 4)
+          ((or (eq piece (quote wk)) (eq piece (quote bk))) 5)
+          (t -1))))
+
+(def chess-neural-piece-plane
+  (lambda (side piece)
+    (let ((kind (chess-neural-piece-kind piece)))
+      (cond ((< kind 0) -1)
+            ((chess-own-piece? side piece) kind)
+            (t (+ 6 kind))))))
+
+(def chess-neural-offset (lambda (plane square) (+ (* plane 64) square)))
+
+(def chess-neural-fill-plane
+  (lambda (output plane value square)
+    (cond ((eq square 64) output)
+          (t ((lambda ()
+                (vector-set! output (chess-neural-offset plane square) value)
+                (chess-neural-fill-plane output plane value (+ square 1))))))))
+
+(def chess-neural-encode-pieces
+  (lambda (board side output square)
+    (cond ((eq square 64) output)
+          (t (let* ((piece (vector-ref board square))
+                    (plane (chess-neural-piece-plane side piece)))
+               ((lambda ()
+                  (cond ((>= plane 0)
+                         (vector-set! output
+                           (chess-neural-offset plane
+                             (chess-neural-normalize-square side square)) 1))
+                        (t (quote ())))
+                  (chess-neural-encode-pieces board side output (+ square 1)))))))))
+
+(def chess-neural-castling-planes
+  (lambda (position output)
+    (let* ((side (chess-position-side position))
+           (other (chess-opposite side))
+           (rights (chess-position-castling position)))
+      ((lambda ()
+        (chess-neural-fill-plane output 12
+          (cond ((chess-castling-king? rights side) 1) (t 0)) 0)
+        (chess-neural-fill-plane output 13
+          (cond ((chess-castling-queen? rights side) 1) (t 0)) 0)
+        (chess-neural-fill-plane output 14
+          (cond ((chess-castling-king? rights other) 1) (t 0)) 0)
+        (chess-neural-fill-plane output 15
+          (cond ((chess-castling-queen? rights other) 1) (t 0)) 0)
+        output)))))
+
+(def chess-neural-position-planes
+  (lambda (position)
+    (let* ((side (chess-position-side position))
+           (output (make-vector chess-neural-input-size))
+           (ep (chess-position-ep position)))
+      ((lambda ()
+        (chess-neural-fill-plane output 17
+          (cond ((eq side (quote white)) 1) (t 0)) 0)
+        (chess-neural-castling-planes position output)
+        (cond ((eq ep chess-empty) (quote ()))
+              (t (vector-set! output
+                   (chess-neural-offset 16
+                     (chess-neural-normalize-square side ep)) 1)))
+        (chess-neural-encode-pieces
+          (chess-position-board position) side output 0))))))
+
+(def chess-policy-queen-geometry?
+  (lambda (from to)
+    (let ((df (chess-neural-abs (- (chess-file to) (chess-file from))))
+          (dr (chess-neural-abs (- (chess-rank to) (chess-rank from)))))
+      (cond ((eq from to) (quote ()))
+            ((eq df 0) t) ((eq dr 0) t) ((eq df dr) t)
+            (t (quote ()))))))
+
+(def chess-policy-knight-geometry?
+  (lambda (from to)
+    (let ((df (chess-neural-abs (- (chess-file to) (chess-file from))))
+          (dr (chess-neural-abs (- (chess-rank to) (chess-rank from)))))
+      (cond ((and (eq df 1) (eq dr 2)) t)
+            ((and (eq df 2) (eq dr 1)) t)
+            (t (quote ()))))))
+
+(def chess-policy-base-geometry?
+  (lambda (from to)
+    (or (chess-policy-queen-geometry? from to)
+        (chess-policy-knight-geometry? from to))))
+
+(def chess-policy-promotion-geometry?
+  (lambda (from to)
+    (let ((from-rank (chess-rank from)) (to-rank (chess-rank to))
+          (df (chess-neural-abs (- (chess-file to) (chess-file from)))))
+      (and (<= df 1)
+        (or (and (eq from-rank 1) (eq to-rank 0))
+            (and (eq from-rank 6) (eq to-rank 7)))))))
+
+(def chess-policy-square-text
+  (lambda (square)
+    (string-append (chess-fen-file-string (chess-file square))
+      (number->string (+ (chess-rank square) 1)))))
+
+(def chess-policy-label
+  (lambda (from to promotion)
+    (string-append (chess-policy-square-text from)
+      (string-append (chess-policy-square-text to)
+        (cond ((eq promotion chess-empty) "")
+              (t (symbol->string promotion)))))))
+
+(def chess-policy-base-labels-to
+  (lambda (from to acc)
+    (cond ((eq to 64) acc)
+          ((chess-policy-base-geometry? from to)
+           (chess-policy-base-labels-to from (+ to 1)
+             (cons (chess-policy-label from to chess-empty) acc)))
+          (t (chess-policy-base-labels-to from (+ to 1) acc)))))
+
+(def chess-policy-base-labels-from
+  (lambda (from acc)
+    (cond ((eq from 64) (reverse acc))
+          (t (chess-policy-base-labels-from (+ from 1)
+               (chess-policy-base-labels-to from 0 acc))))))
+
+(def chess-policy-add-promotions
+  (lambda (from to promotions acc)
+    (cond ((atom promotions) acc)
+          (t (chess-policy-add-promotions from to (cdr promotions)
+               (cons (chess-policy-label from to (car promotions)) acc))))))
+
+(def chess-policy-promotion-labels-to
+  (lambda (from to acc)
+    (cond ((eq to 64) acc)
+          ((chess-policy-promotion-geometry? from to)
+           (chess-policy-promotion-labels-to from (+ to 1)
+             (chess-policy-add-promotions from to (quote (q r b n)) acc)))
+          (t (chess-policy-promotion-labels-to from (+ to 1) acc)))))
+
+(def chess-policy-promotion-labels-from
+  (lambda (from acc)
+    (cond ((eq from 64) (reverse acc))
+          (t (chess-policy-promotion-labels-from (+ from 1)
+               (chess-policy-promotion-labels-to from 0 acc))))))
+
+(def chess-policy-labels
+  (lambda ()
+    (append (chess-policy-base-labels-from 0 (quote ()))
+      (chess-policy-promotion-labels-from 0 (quote ())))))
+
+(def chess-policy-flip-square
+  (lambda (square)
+    (chess-square (chess-file square) (- 7 (chess-rank square)))))
+
+(def chess-policy-flip-move
+  (lambda (move)
+    (cond ((atom (cdr (cdr move)))
+           (chess-move (chess-policy-flip-square (chess-move-from move))
+             (chess-policy-flip-square (chess-move-to move))))
+          (t (chess-promotion-move
+               (chess-policy-flip-square (chess-move-from move))
+               (chess-policy-flip-square (chess-move-to move))
+               (chess-move-promotion move))))))
+

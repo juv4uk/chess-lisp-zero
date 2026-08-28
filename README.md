@@ -90,3 +90,10 @@ Workflow `Windows release artifact` збирає на вимогу непідп�
 Ліцензія: MIT (`LICENSE`, `repo.my`). Сторонній код/дані — лише
 case-by-case, з провенансом і ревʼю ліцензії (chess.js виключено, див.
 `NOTICE-third-party.md`).
+
+## Нейромережа
+
+Практичний план CPU → CUDA → bounded FPGA та бюджет моделі для реального
+owner hardware описані в [`docs/NEURAL-NETWORK-ROADMAP.md`](docs/NEURAL-NETWORK-ROADMAP.md).
+Виконуваний WSM-контракт `lib/neural-contract.wsm` фіксує 18×8×8 input
+planes і детермінований policy vocabulary із 1968 UCI labels.

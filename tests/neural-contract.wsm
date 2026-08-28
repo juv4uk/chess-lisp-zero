@@ -1,0 +1,48 @@
+(load "lib/chess.my")
+(load "lib/fen.wsm")
+(load "lib/neural-contract.wsm")
+
+(def neural-assert
+  (lambda (name condition)
+    (cond (condition (print (list name (quote PASS))))
+          (t (error (string-append "neural contract failed: "
+                     (symbol->string name)))))))
+
+(def initial (chess-initial-position))
+(def planes (chess-neural-position-planes initial))
+
+(neural-assert (quote plane-vector-size) (= (vector-length planes) 1152))
+(neural-assert (quote own-white-rook-a1)
+  (= (vector-ref planes (chess-neural-offset 3 0)) 1))
+(neural-assert (quote opponent-black-rook-a8)
+  (= (vector-ref planes (chess-neural-offset 9 56)) 1))
+(neural-assert (quote own-kingside-castling)
+  (= (vector-ref planes (chess-neural-offset 12 17)) 1))
+(neural-assert (quote white-side-witness)
+  (= (vector-ref planes (chess-neural-offset 17 63)) 1))
+
+(def black-position
+  (chess-position (chess-position-board initial) (quote black)
+    (chess-position-castling initial) chess-empty 0 1))
+(def black-planes (chess-neural-position-planes black-position))
+(neural-assert (quote black-own-rook-normalized-a1)
+  (= (vector-ref black-planes (chess-neural-offset 3 0)) 1))
+(neural-assert (quote black-side-witness-zero)
+  (= (vector-ref black-planes (chess-neural-offset 17 0)) 0))
+
+(def base-labels (chess-policy-base-labels-from 0 (quote ())))
+(def promotion-labels (chess-policy-promotion-labels-from 0 (quote ())))
+(def policy-labels (append base-labels promotion-labels))
+(neural-assert (quote base-label-count) (= (length base-labels) 1792))
+(neural-assert (quote promotion-label-count) (= (length promotion-labels) 176))
+(neural-assert (quote policy-label-count) (= (length policy-labels) 1968))
+(neural-assert (quote first-base-label) (eq (car policy-labels) "a1b1"))
+(neural-assert (quote first-promotion-label)
+  (eq (nth 1792 policy-labels) "a2a1q"))
+
+(def flip-fixture (chess-promotion-move 48 56 (quote q)))
+(neural-assert (quote policy-flip-involution)
+  (equal? (chess-policy-flip-move (chess-policy-flip-move flip-fixture))
+    flip-fixture))
+
+(print (quote CHESS-NEURAL-CONTRACT-PASS))
