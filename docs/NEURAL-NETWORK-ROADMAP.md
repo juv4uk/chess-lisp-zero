@@ -151,12 +151,13 @@ a measured compact family:
 | Profile | Channels | Residual blocks | Purpose |
 |---|---:|---:|---|
 | `tiny` | 32 | 3 | correctness, pipeline and overfit-one-batch test |
-| `owner-gpu` | 64 | 5 | default training/search candidate for GTX 1050 Ti |
-| `stretch` | 96 | 6 | only if measured VRAM/time leave useful headroom |
+| `owner-gpu` | 128 | 8 | measured default for GTX 1050 Ti |
+| `stretch` | 192 | 10 | only after a separate measured probe |
 
 Operational constraints:
 
-- begin with batch 32; probe 64 and 128 rather than assuming they fit;
+- begin real training with measured batch 128; batch 256 also passed a bounded
+  allocation/gradient-step probe and remains an opt-in throughput experiment;
 - stream or memory-map training examples instead of retaining a large corpus
   in 8 GiB RAM;
 - use one data-loader worker initially and cap CPU parallelism at 3 workers so
@@ -171,6 +172,9 @@ Operational constraints:
 The first success criterion is not Elo. It is: `tiny` deliberately overfits a
 small licensed fixture set, reloads identical weights, and produces stable
 policy/value outputs through the adapter boundary.
+
+The profile decision and raw bounded measurements are recorded in
+`docs/GPU-PROFILE-BENCHMARK-2026-08-29.md`.
 
 ## Evidence states
 

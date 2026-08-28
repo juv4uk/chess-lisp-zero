@@ -26,8 +26,17 @@ CHECKPOINT_SCHEMA = "chess-lisp-zero-checkpoint-v1"
 
 @dataclass(frozen=True)
 class ModelConfig:
-    channels: int = 32
-    residual_blocks: int = 3
+    channels: int = 128
+    residual_blocks: int = 8
+
+
+MODEL_PROFILES = {
+    "tiny": ModelConfig(32, 3),
+    "owner-gpu": ModelConfig(128, 8),
+    "stretch": ModelConfig(192, 10),
+}
+DEFAULT_PROFILE = "owner-gpu"
+DEFAULT_BATCH_SIZE = 128
 
 
 @dataclass

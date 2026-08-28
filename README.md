@@ -103,7 +103,8 @@ planes і детермінований policy vocabulary із 1968 UCI labels.
 `lib/self-play.wsm` перетворює PUCT visit policy на канонічні індекси
 `0..1967`, зберігає `(planes, sparse pi, side, z)` і проставляє outcome після
 завершення партії. Це виконуваний data-boundary, ще не повний training loop.
-`training/from_zero_torch.py` реалізує tiny PyTorch residual backend (32×3):
+`training/from_zero_torch.py` реалізує PyTorch residual backend: measured
+`owner-gpu` 128×8 / batch 128 і `tiny` 32×3 для CI:
 seeded random weights, policy/value loss, strict from-zero provenance та
 SHA-256 checkpoint/reload. Це виконуваний CUDA/CPU seam, не твердження про
 силу гри.

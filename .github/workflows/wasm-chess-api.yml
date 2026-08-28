@@ -17,6 +17,7 @@ on:
       - 'training/**'
       - 'tests/test_from_zero_torch.py'
       - 'docs/NEURAL-NETWORK-ROADMAP.md'
+      - 'docs/GPU-PROFILE-BENCHMARK-2026-08-29.md'
       - 'src/chess-api.mjs'
       - 'tools/wasm-chess-smoke.mjs'
       - '.github/workflows/wasm-chess-api.yml'
