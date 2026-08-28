@@ -4,6 +4,7 @@
   "private": true,
   "description": "Chess engine on my-lisp with Tauri shell",
   "scripts": {
+    "build:wasm": "bash scripts/build-wasm.sh",
     "tauri": "tauri"
   }
 }

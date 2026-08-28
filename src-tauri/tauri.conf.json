@@ -4,9 +4,8 @@
   "version": "0.1.0",
   "identifier": "org.chess-lisp-zero.app",
   "build": {
-    "beforeDevCommand": "echo 'static dev'",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "echo 'static build'",
+    "beforeDevCommand": "npm run build:wasm",
+    "beforeBuildCommand": "npm run build:wasm",
     "frontendDist": "../src"
   },
   "app": {

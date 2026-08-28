@@ -3,6 +3,7 @@
 .venv/
 target/
 tmp/
+src/generated/
 
 # Generated chess evidence and training state
 data/generated/

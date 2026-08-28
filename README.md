@@ -29,6 +29,8 @@
   en-passant і всіх чотирьох перетворень пішака;
 - `lib/wasm-api.wsm` + `src/chess-api.mjs` — typed JSON-safe facade над
   persistent `my-lisp-wasm` session без дублювання шахових правил у JS;
+- `src/app.mjs` — playable human move slice: authoritative FEN rendering,
+  legal-target highlighting, move application and terminal status via WASM;
 - `lib/evaluation.wsm` — детермінована material evaluation;
 - `lib/search.wsm` — depth-limited minimax correctness baseline без заяви
   про силу гри.

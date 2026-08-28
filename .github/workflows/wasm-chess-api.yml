@@ -43,3 +43,16 @@ jobs:
 
       - name: Run the same chess sources through real WASM
         run: node tools/wasm-chess-smoke.mjs wasm-pkg
+
+      - name: Build browser play-slice assets
+        env:
+          MY_LISP_DIR: ${{ github.workspace }}/my-lisp
+        run: bash scripts/build-wasm.sh
+
+      - name: Validate browser modules
+        run: |
+          node --check src/chess-api.mjs
+          node --check src/app.mjs
+          test -f src/generated/wasm/my_lisp_wasm.js
+          test -f src/generated/wasm/my_lisp_wasm_bg.wasm
+          test -f src/generated/lisp/chess.my
