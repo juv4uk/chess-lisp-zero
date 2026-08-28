@@ -39,6 +39,23 @@ PIECES = {"P": "wp", "N": "wn", "B": "wb", "R": "wr", "Q": "wq",
           "q": "bq", "k": "bk"}
 
 
+def fen_castling(parts):
+    """Return the chess.my castling symbol list for a FEN castling field.
+
+    FEN field 3: '-' means no rights; otherwise each of KQkq is present.
+    This is required so perft/legal-move fixtures that DO have castling
+    rights (e.g. Kiwipete) keep them, while rights-less positions (Position 3)
+    get none -- the published counts assume the true castling field.
+    """
+    field = parts[2]
+    if field == "-":
+        return "()"
+    rights = []
+    for ch in field:
+        rights.append(ch)
+    return "(quote (" + " ".join(rights) + "))"
+
+
 def build_position_expr(fen):
     """Build a my-lisp position expression from a FEN string.
 
@@ -50,6 +67,7 @@ def build_position_expr(fen):
     parts = fen.split()
     board_field = parts[0]
     side = "white" if parts[1] == "w" else "black"
+    castling = fen_castling(parts)
     pieces = []
     # FEN lists rank 8 first; chess.my indexes a1=0, so materialize ranks in
     # reverse order and bypass the currently incomplete character parser.
@@ -65,8 +83,31 @@ def build_position_expr(fen):
     return (
         "(def pos (chess-position "
         f"{board} "
-        f"(quote {side}) (quote (K Q k q)) (quote ()) 0 1)) "
+        f"(quote {side}) {castling} (quote ()) 0 1)) "
         "(chess-legal-moves pos)"
+    )
+
+
+def build_perft_expr(fen, depth):
+    """Build a my-lisp chess-perft expression for a FEN position at depth."""
+    parts = fen.split()
+    board_field = parts[0]
+    side = "white" if parts[1] == "w" else "black"
+    castling = fen_castling(parts)
+    pieces = []
+    for rank in reversed(board_field.split("/")):
+        for char in rank:
+            if char.isdigit():
+                pieces.extend(["()"] * int(char))
+            else:
+                pieces.append(PIECES[char])
+    if len(pieces) != 64:
+        raise ValueError(f"FEN board expands to {len(pieces)} squares, not 64")
+    board = "(chess-board-from-list (quote (" + " ".join(pieces) + ")))"
+    return (
+        f"(def pos (chess-position {board} (quote {side}) {castling} "
+        f"(quote ()) 0 1)) "
+        f"(chess-perft pos {depth})"
     )
 
 
@@ -161,11 +202,39 @@ def main():
             rec["missing_from_mine"] = missing[:20]
             rec["extra_in_mine"] = extra[:20]
         results.append(rec)
+
+    # Perft node-count differential: compare the library's chess-perft output
+    # against the published perft node counts, per depth. Only depths actually
+    # present in the fixture are run, keeping scope light (depth 1-2).
+    perft_results = []
+    for fx in witness.get("perft", []):
+        for depth_str, expected in fx["depths"].items():
+            depth = int(depth_str)
+            resp = oracle.request(build_perft_expr(fx["fen"], depth))
+            status, value = parse_response(resp)
+            rec = {
+                "id": f"{fx['id']}:d{depth}",
+                "fen": fx["fen"],
+                "depth": depth,
+                "expected": expected,
+                "source": fx.get("source", ""),
+            }
+            if status != "ok":
+                rec["error"] = f"my-lisp: {resp[:200]}"
+            else:
+                try:
+                    rec["actual"] = int(value)
+                    rec["match"] = (rec["actual"] == expected)
+                except ValueError:
+                    rec["error"] = f"non-numeric perft value: {value[:80]}"
+            perft_results.append(rec)
     oracle.close()
 
     lib_sha = sha256_file(f"{repo}/lib/chess.my")
     perft_my = sum(1 for r in results if r.get("match"))
     failed = [r for r in results if not r.get("match")]
+    perft_pass = sum(1 for r in perft_results if r.get("match"))
+    perft_failed = [r for r in perft_results if not r.get("match")]
 
     lines = [
         "# Differential gate evidence — my-lisp chess vs published perft witness",
@@ -183,8 +252,8 @@ def main():
         f"| witness role | {witness['witness']['role']} |",
         f"| witness runtime | {witness['witness']['node_version']} |",
         "| oracle | 127.0.0.1:9999 semantic eval |",
-        "| normalization | move → from*64+to, sorted int list |",
-        "| surface scope | fixtures whose depth-1 moves require no castling / en-passant / promotion |",
+        "| normalization | move → from*64+to, sorted int list; perft → integer node count |",
+        "| surface scope | legal-move list: startpos depth-1 (no castling/ep/promotion); perft counts: depths 1-2, castling rights parsed from FEN |",
         "",
         "## Results",
         "",
@@ -202,19 +271,40 @@ def main():
 
     lines += [
         "",
-        f"**Summary:** {perft_my}/{len(results)} cases match.",
+        "## Perft node-count differential",
+        "",
+        "| Fixture | depth | my-lisp | published | Match | Source |",
+        "|---|---|---|---|---|---|",
+    ]
+    for r in perft_results:
+        if "error" in r:
+            lines.append(f"| {r['id']} | {r['depth']} | ERROR | {r['expected']} | - | {r['source']} |")
+            lines.append(f"> {r['error']}")
+        else:
+            lines.append(
+                f"| {r['id']} | {r['depth']} | {r['actual']} | "
+                f"{r['expected']} | {'YES' if r['match'] else 'NO'} | {r['source']} |")
+
+    lines += [
+        "",
+        f"**Perft summary:** {perft_pass}/{len(perft_results)} perft checks match.",
+        f"**Move-list summary:** {perft_my}/{len(results)} legal-move cases match.",
         "",
         "## Mismatch detail",
         "",
     ]
-    if not failed:
+    if not failed and not perft_failed:
         lines.append("None.")
     else:
-        for r in failed:
-            lines.append(json.dumps(r, indent=1))
+        if failed:
+            for r in failed:
+                lines.append(json.dumps(r, indent=1))
+        if perft_failed:
+            for r in perft_failed:
+                lines.append(json.dumps(r, indent=1))
 
     open(out_path, "w").write("\n".join(lines) + "\n")
-    print(f"{perft_my}/{len(results)} match -> {out_path}")
+    print(f"{perft_my}/{len(results)} move-list + {perft_pass}/{len(perft_results)} perft match -> {out_path}")
 
 
 if __name__ == "__main__":
