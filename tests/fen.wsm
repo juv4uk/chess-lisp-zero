@@ -1,0 +1,27 @@
+(load "lib/chess.my")
+(load "lib/fen.wsm")
+
+(def fen-assert
+  (lambda (name actual expected)
+    (cond ((equal? actual expected) (print (list (quote pass) name actual)))
+          (t ((lambda ()
+                (print (list (quote fail) name actual expected))
+                (chess-test-failure name actual expected)))))))
+
+(def initial-fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+(def initial-from-fen (chess-position-from-fen initial-fen))
+(fen-assert (quote initial-roundtrip)
+  (chess-position-to-fen initial-from-fen) initial-fen)
+(fen-assert (quote initial-a1)
+  (vector-ref (chess-position-board initial-from-fen) 0) (quote wr))
+(fen-assert (quote initial-e8)
+  (vector-ref (chess-position-board initial-from-fen) 60) (quote bk))
+
+(def state-fen "4k3/8/8/3pP3/8/8/8/4K3 w - d6 17 42")
+(def state-from-fen (chess-position-from-fen state-fen))
+(fen-assert (quote state-roundtrip)
+  (chess-position-to-fen state-from-fen) state-fen)
+(fen-assert (quote state-ep) (chess-position-ep state-from-fen) 43)
+(fen-assert (quote state-halfmove) (chess-position-halfmove state-from-fen) 17)
+(fen-assert (quote state-fullmove) (chess-position-fullmove state-from-fen) 42)
+(print (quote CHESS-FEN-PASS))

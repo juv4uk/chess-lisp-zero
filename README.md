@@ -22,6 +22,11 @@
   ходу, `checkmate`/`stalemate` та детермінований `perft`;
 - `tests/perft-quick.my` — короткий тест для навантаженого середовища;
 - `tests/perft.my` — повний fixture з очікуваннями 20/400/8902;
+- `tests/perft-standard.wsm` — перевірка опублікованих Kiwipete та Position 3
+  fixtures (depth 1/2: 48/2039 та 14/191), включно зі спеціальними правилами;
+- `tests/fen.wsm` — точний round-trip усіх шести полів FEN;
+- `tests/apply-move.wsm` — застосування звичайних ходів, рокіровки,
+  en-passant і всіх чотирьох перетворень пішака;
 - `lib/evaluation.wsm` — детермінована material evaluation;
 - `lib/search.wsm` — depth-limited minimax correctness baseline без заяви
   про силу гри.
@@ -43,16 +48,17 @@ castling/apply-move fixtures = PASS
 `perft(3) = 8902` виконано й підтверджено release-інтерпретатором 2026-08-27
 разом із перевіркою, що початкова дошка відновлена після обходу. Це повільний
 acceptance gate, тому `perft-quick.my` лишається коротким повсякденним тестом.
-`apply-move` уже має
-виконувані fixtures для рокіровки, прав рокіровки й clocks, але генерація
-рокіровки/en passant та promotion ще не входять у завершений зріз;
-стартовий perft 1..3 їх не активує.
+Генерація й застосування рокіровки, en-passant та всіх чотирьох promotion
+choices перевіряються окремими fixtures. Стандартні Kiwipete та Position 3
+perft-позиції додатково перевіряють їх у зв'язці з FEN та legal-move filter.
 
 Запуск із checkout `chess-lisp-zero`:
 
 ```bash
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft-quick.my
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/apply-move.wsm
+/home/agents/GitHub/my-lisp/target/release/my-lisp tests/fen.wsm
+/home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft-standard.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/evaluation.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/search.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft.my

@@ -55,3 +55,56 @@
   (chess-position-halfmove
     (chess-apply-move pawn-position (chess-move 8 16)))
   0)
+
+(def move-member?
+  (lambda (needle moves)
+    (cond ((atom moves) (quote ()))
+          ((equal? needle (car moves)) t)
+          (t (move-member? needle (cdr moves))))))
+
+; Castling generation requires rights, an unmoved rook, clear transit squares,
+; and no attack on the king's origin/transit/destination.
+(apply-assert (quote castle-generated)
+  (move-member? (chess-move 4 6) (chess-legal-moves castle-position))
+  t)
+
+; En-passant is generated from the position target and removes the bypassed pawn.
+(def ep-board (make-vector 64))
+(vector-set! ep-board 4 (quote wk))
+(vector-set! ep-board 60 (quote bk))
+(vector-set! ep-board 36 (quote wp))
+(vector-set! ep-board 35 (quote bp))
+(def ep-position
+  (chess-position ep-board (quote white) (quote ()) 43 0 1))
+(apply-assert (quote en-passant-generated)
+  (move-member? (chess-move 36 43) (chess-legal-moves ep-position))
+  t)
+(def ep-next (chess-apply-move ep-position (chess-move 36 43)))
+(apply-assert (quote en-passant-lands)
+  (vector-ref (chess-position-board ep-next) 43) (quote wp))
+(apply-assert (quote en-passant-removes-pawn)
+  (vector-ref (chess-position-board ep-next) 35) (quote ()))
+
+; Promotion generation exposes all four choices; apply-move preserves the choice.
+(def promotion-board (make-vector 64))
+(vector-set! promotion-board 4 (quote wk))
+(vector-set! promotion-board 63 (quote bk))
+(vector-set! promotion-board 48 (quote wp))
+(def promotion-position
+  (chess-position promotion-board (quote white) (quote ()) (quote ()) 0 1))
+(def promotion-moves (chess-legal-moves promotion-position))
+(apply-assert (quote promote-queen-generated)
+  (move-member? (chess-promotion-move 48 56 (quote q)) promotion-moves) t)
+(apply-assert (quote promote-rook-generated)
+  (move-member? (chess-promotion-move 48 56 (quote r)) promotion-moves) t)
+(apply-assert (quote promote-bishop-generated)
+  (move-member? (chess-promotion-move 48 56 (quote b)) promotion-moves) t)
+(apply-assert (quote promote-knight-generated)
+  (move-member? (chess-promotion-move 48 56 (quote n)) promotion-moves) t)
+(apply-assert (quote promote-knight-applied)
+  (vector-ref
+    (chess-position-board
+      (chess-apply-move promotion-position
+        (chess-promotion-move 48 56 (quote n))))
+    56)
+  (quote wn))

@@ -10,8 +10,13 @@
 (def chess-empty (quote ()))
 
 (def chess-move (lambda (from to) (list from to)))
+(def chess-promotion-move (lambda (from to promotion) (list from to promotion)))
 (def chess-move-from car)
 (def chess-move-to second)
+(def chess-move-promotion
+  (lambda (move)
+    (cond ((atom (cdr (cdr move))) (quote ()))
+          (t (third move)))))
 
 (def chess-position
   (lambda (board side castling ep halfmove fullmove)
@@ -313,8 +318,9 @@
 
 (def chess-pseudo-moves
   (lambda (position)
-    (chess-pseudo-moves-from (chess-position-board position)
-      (chess-position-side position) 0 (quote ()))))
+    (chess-add-special-moves position
+      (chess-pseudo-moves-from (chess-position-board position)
+        (chess-position-side position) 0 (quote ())))))
 
 (def chess-apply-board-move
   (lambda (board move)
@@ -450,7 +456,29 @@
              ;; update fullmove number
              (let ((next-fullmove (cond ((eq side (quote black)) (+ fullmove 1))
                                         (t fullmove))))
-               (chess-position next-board (chess-opposite side) next-castling next-ep next-halfmove next-fullmove)))))))))
+               ((lambda ()
+                  ;; Promotion is explicit when the move carries a third
+                  ;; field; a plain last-rank pawn move defaults to a queen.
+                  (cond ((chess-pawn? piece)
+                         (cond ((or (eq (chess-rank to) 0) (eq (chess-rank to) 7))
+                                (let ((choice (chess-move-promotion move)))
+                                  (vector-set! next-board to
+                                    (chess-promotion-piece side choice))))
+                               (t (quote ()))))
+                        (t (quote ())))
+                  (chess-position next-board (chess-opposite side) next-castling next-ep next-halfmove next-fullmove)))))))))))
+
+(def chess-promotion-piece
+  (lambda (side choice)
+    (cond ((eq side (quote white))
+           (cond ((eq choice (quote r)) (quote wr))
+                 ((eq choice (quote b)) (quote wb))
+                 ((eq choice (quote n)) (quote wn))
+                 (t (quote wq))))
+          (t (cond ((eq choice (quote r)) (quote br))
+                   ((eq choice (quote b)) (quote bb))
+                   ((eq choice (quote n)) (quote bn))
+                   (t (quote bq)))))))
 
 (def chess-find-piece-from
   (lambda (board piece index)
@@ -524,15 +552,116 @@
       (cond ((eq king -1) t)
             (t (chess-square-attacked? board king (chess-opposite side)))))))
 
+; --- special-move generation ---
+
+(def chess-expand-promotions
+  (lambda (board moves accepted)
+    (cond ((atom moves) (reverse accepted))
+          (t (let* ((move (car moves))
+                    (piece (vector-ref board (chess-move-from move)))
+                    (rank (chess-rank (chess-move-to move))))
+               (cond ((and (chess-pawn? piece) (or (eq rank 0) (eq rank 7)))
+                      (chess-expand-promotions board (cdr moves)
+                        (cons (chess-promotion-move (chess-move-from move) (chess-move-to move) (quote n))
+                          (cons (chess-promotion-move (chess-move-from move) (chess-move-to move) (quote b))
+                            (cons (chess-promotion-move (chess-move-from move) (chess-move-to move) (quote r))
+                              (cons (chess-promotion-move (chess-move-from move) (chess-move-to move) (quote q)) accepted))))))
+                     (t (chess-expand-promotions board (cdr moves) (cons move accepted)))))))))
+
+(def chess-add-en-passant-from
+  (lambda (board side from ep moves)
+    (cond ((< from 0) moves)
+          ((> from 63) moves)
+          ((not (eq (vector-ref board from)
+                  (cond ((eq side (quote white)) (quote wp)) (t (quote bp))))) moves)
+          ((not (eq (abs (- (chess-file from) (chess-file ep))) 1)) moves)
+          (t (cons (chess-move from ep) moves)))))
+
+(def chess-add-en-passant
+  (lambda (position moves)
+    (let* ((board (chess-position-board position))
+           (side (chess-position-side position))
+           (ep (chess-position-ep position)))
+      (cond ((eq ep chess-empty) moves)
+            ((eq side (quote white))
+             (chess-add-en-passant-from board side (- ep 7) ep
+               (chess-add-en-passant-from board side (- ep 9) ep moves)))
+            (t (chess-add-en-passant-from board side (+ ep 9) ep
+                 (chess-add-en-passant-from board side (+ ep 7) ep moves)))))))
+
+(def chess-castle-clear?
+  (lambda (board squares)
+    (cond ((atom squares) t)
+          ((not (eq (vector-ref board (car squares)) chess-empty)) (quote ()))
+          (t (chess-castle-clear? board (cdr squares))))))
+
+(def chess-castle-safe?
+  (lambda (board by-side squares)
+    (cond ((atom squares) t)
+          ((chess-square-attacked? board (car squares) by-side) (quote ()))
+          (t (chess-castle-safe? board by-side (cdr squares))))))
+
+(def chess-add-castling
+  (lambda (position moves)
+    (let* ((board (chess-position-board position))
+           (side (chess-position-side position))
+           (rights (chess-position-castling position))
+           (enemy (chess-opposite side)))
+      (cond ((eq side (quote white))
+             (let ((king-side
+                     (cond ((and (chess-castling-king? rights side)
+                                 (eq (vector-ref board 4) (quote wk))
+                                 (eq (vector-ref board 7) (quote wr))
+                                 (chess-castle-clear? board (quote (5 6)))
+                                 (chess-castle-safe? board enemy (quote (4 5 6))))
+                            (cons (chess-move 4 6) moves))
+                           (t moves))))
+               (cond ((and (chess-castling-queen? rights side)
+                           (eq (vector-ref board 4) (quote wk))
+                           (eq (vector-ref board 0) (quote wr))
+                           (chess-castle-clear? board (quote (1 2 3)))
+                           (chess-castle-safe? board enemy (quote (4 3 2))))
+                      (cons (chess-move 4 2) king-side))
+                     (t king-side))))
+            (t (let ((king-side
+                       (cond ((and (chess-castling-king? rights side)
+                                   (eq (vector-ref board 60) (quote bk))
+                                   (eq (vector-ref board 63) (quote br))
+                                   (chess-castle-clear? board (quote (61 62)))
+                                   (chess-castle-safe? board enemy (quote (60 61 62))))
+                              (cons (chess-move 60 62) moves))
+                             (t moves))))
+                 (cond ((and (chess-castling-queen? rights side)
+                             (eq (vector-ref board 60) (quote bk))
+                             (eq (vector-ref board 56) (quote br))
+                             (chess-castle-clear? board (quote (57 58 59)))
+                             (chess-castle-safe? board enemy (quote (60 59 58))))
+                        (cons (chess-move 60 58) king-side))
+                       (t king-side))))))))
+
+(def chess-add-special-moves
+  (lambda (position moves)
+    (chess-add-castling position
+      (chess-add-en-passant position
+        (chess-expand-promotions (chess-position-board position) moves (quote ()))))))
+
 (def chess-legal-move?
   (lambda (position move)
     (let* ((side (chess-position-side position))
            (board (chess-position-board position))
-           (captured (chess-do-move! board move))
-           (legal (not (chess-in-check? board side))))
-      ((lambda ()
-         (chess-undo-move! board move captured)
-         legal)))))
+           (piece (vector-ref board (chess-move-from move)))
+           (ep (chess-position-ep position)))
+      ;; En-passant removes a second square, so the ordinary from/to mutation
+      ;; cannot prove king safety: the captured pawn may be a line blocker.
+      (cond ((and (chess-pawn? piece) (not (eq ep chess-empty))
+                  (eq (chess-move-to move) ep))
+             (let ((next (chess-apply-move position move)))
+               (not (chess-in-check? (chess-position-board next) side))))
+            (t (let* ((captured (chess-do-move! board move))
+                      (legal (not (chess-in-check? board side))))
+                 ((lambda ()
+                    (chess-undo-move! board move captured)
+                    legal))))))))
 
 (def chess-legal-moves-filter
   (lambda (position moves accepted)
