@@ -117,4 +117,11 @@
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
     (description . "Define a process boundary that uses the existing chess-tauri-zero PyTorch policy/value network as an optional teacher/oracle for normalized fixtures. Verify model/config/weight provenance, exact input/output contracts and deterministic recorded responses. PyTorch remains replaceable and must not become chess-rule authority or an implicit dependency of the my-lisp semantic core.")))
+
+  ("CHESS-LISP-ZERO-SELF-PLAY-FROM-ZERO" . (
+    (priority . 8.0)
+    (capabilities . (chess my-lisp machine-learning self-play checkpointing testing))
+    (depends-on . (CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
+    (origin . chess-lisp-zero)
+    (description . "Implement a resumable from-zero training mode: random seeded weights, WSM-authoritative self-play, PUCT visit-policy targets, terminal outcome value targets, bounded replay, checkpoint manifests and deterministic arena gating. No teacher data, engine evaluations, books or pretrained weights may enter a from-zero run; teacher and hybrid modes remain explicitly separate.")))
 )))

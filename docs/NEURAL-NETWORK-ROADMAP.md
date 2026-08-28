@@ -29,6 +29,53 @@ evaluations. Our work remains the stable semantic boundary, WSM search,
 cross-substrate evidence, and explainable orchestration. External tools are
 replaceable adapters, never implicit language or chess authorities.
 
+## Training modes
+
+### `from-zero` — primary independent-learning mode
+
+`from-zero` starts with randomly initialized weights and consumes no engine
+evaluations, opening books, pretrained weights or teacher games. The only
+prior knowledge is the ratified chess environment itself: legal moves,
+terminal outcomes and the policy-plane contract.
+
+```text
+random checkpoint + reproducible seed
+  -> PUCT self-play (WSM legal moves)
+  -> examples (planes, visit-policy, final outcome)
+  -> bounded replay buffer
+  -> policy loss + value loss
+  -> candidate checkpoint
+  -> candidate-vs-current arena
+  -> accept or retain current checkpoint
+  -> repeat, with resumable state
+```
+
+For each visited position:
+
+- input `x` is the canonical 18×8×8 encoding;
+- target `pi` is normalized root visit counts over the 1968 policy labels;
+- target `z` is the final game result from that position's side-to-move
+  perspective;
+- network loss begins as `cross_entropy(policy, pi) + mse(value, z)` plus
+  explicitly recorded regularization.
+
+Exploration is a training concern, not a change to chess semantics. Root
+Dirichlet noise and temperature are enabled only in `from-zero` self-play,
+with an explicit seed for reproducibility; evaluation/arena games use no
+noise and deterministic move selection.
+
+The initial owner-hardware profile uses `tiny` (32 channels, 3 blocks), batch
+32, one self-play worker and a bounded cyclic replay buffer. Checkpoints must
+include model config, optimizer state, RNG seed, training iteration and policy
+contract version so training can resume after interruption.
+
+### `teacher` — optional acceleration mode
+
+Teacher positions/evaluations may accelerate experiments but live in a
+separate provenance-labelled dataset and adapter. They are never silently
+mixed into a `from-zero` run. A run manifest must state `from-zero`, `teacher`
+or a separately ratified `hybrid` mode.
+
 ## Ratified first boundary
 
 ### Input: 18 x 8 x 8, CHW
@@ -75,11 +122,13 @@ the promotion suffix. Flip is an involution and must round-trip.
 1. **Contract and fixtures** — executable planes, labels, flip round-trips.
 2. **CPU reference** — deterministic inference and a handcrafted evaluator.
 3. **PUCT/MCTS in WSM** — injectable evaluator, fixed-tree evidence first.
-4. **Teacher adapter** — optional PyTorch/engine process with provenance.
-5. **CUDA differential** — only measured bulk kernels admitted by CML.
-6. **FPGA selection** — one bounded kernel after profiling; simulation,
+4. **From-zero self-play** — replay/checkpoint loop with deterministic smoke
+   mode before any long training run.
+5. **Teacher adapter** — optional PyTorch/engine process with provenance.
+6. **CUDA differential** — only measured bulk kernels admitted by CML.
+7. **FPGA selection** — one bounded kernel after profiling; simulation,
    synthesis and hardware evidence remain distinct.
-7. **Tauri evidence view** — policy proposals, legality mask, search visits,
+8. **Tauri evidence view** — policy proposals, legality mask, search visits,
    value changes and substrate comparisons.
 
 ## Owner hardware profile and model budget
