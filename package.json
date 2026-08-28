@@ -6,5 +6,8 @@
   "scripts": {
     "build:wasm": "bash scripts/build-wasm.sh",
     "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
   }
 }

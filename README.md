@@ -68,6 +68,13 @@ perft-позиції додатково перевіряють їх у зв'яз
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft.my
 ```
 
+## Windows artifact
+
+Workflow `Windows release artifact` збирає на вимогу непідписані Tauri
+інсталятори. Результат доступний у GitHub Actions як artifact
+`chess-lisp-zero-windows`; signing і публікація GitHub Release навмисно
+залишені окремими наступними кроками.
+
 ## Межі
 
 - `my-lisp` є авторитетом семантики мови.

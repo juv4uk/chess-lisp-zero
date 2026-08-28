@@ -1,0 +1,51 @@
+name: Windows release artifact
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout chess-lisp-zero
+        uses: actions/checkout@v4
+
+      - name: Checkout canonical my-lisp
+        uses: actions/checkout@v4
+        with:
+          repository: juv4uk/my-lisp
+          path: my-lisp
+
+      - name: Install Rust with WASM target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Tauri Windows bundles
+        env:
+          MY_LISP_DIR: my-lisp
+        run: npm run tauri -- build
+
+      - name: Upload Windows installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess-lisp-zero-windows
+          if-no-files-found: error
+          path: |
+            target/release/bundle/**/*.msi
+            target/release/bundle/**/*.exe

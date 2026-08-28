@@ -2,6 +2,7 @@
 .cache/
 .venv/
 target/
+node_modules/
 tmp/
 src/generated/
 
