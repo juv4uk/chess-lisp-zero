@@ -27,6 +27,8 @@
 - `tests/fen.wsm` — точний round-trip усіх шести полів FEN;
 - `tests/apply-move.wsm` — застосування звичайних ходів, рокіровки,
   en-passant і всіх чотирьох перетворень пішака;
+- `lib/wasm-api.wsm` + `src/chess-api.mjs` — typed JSON-safe facade над
+  persistent `my-lisp-wasm` session без дублювання шахових правил у JS;
 - `lib/evaluation.wsm` — детермінована material evaluation;
 - `lib/search.wsm` — depth-limited minimax correctness baseline без заяви
   про силу гри.

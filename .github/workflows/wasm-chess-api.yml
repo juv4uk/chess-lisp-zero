@@ -1,0 +1,45 @@
+name: WASM Chess API
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/chess.my'
+      - 'lib/fen.wsm'
+      - 'lib/wasm-api.wsm'
+      - 'src/chess-api.mjs'
+      - 'tools/wasm-chess-smoke.mjs'
+      - '.github/workflows/wasm-chess-api.yml'
+
+jobs:
+  native-wasm-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout canonical my-lisp
+        uses: actions/checkout@v4
+        with:
+          repository: juv4uk/my-lisp
+          path: my-lisp
+
+      - name: Install Rust with WASM target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Build canonical native interpreter
+        run: cargo build --release --manifest-path my-lisp/Cargo.toml -p my-lisp-cli
+
+      - name: Run native chess API fixture
+        run: my-lisp/target/release/my-lisp tests/wasm-api.wsm
+
+      - name: Build canonical WASM adapter
+        run: wasm-pack build my-lisp/crates/my-lisp-wasm --target nodejs --out-dir "$GITHUB_WORKSPACE/wasm-pkg"
+
+      - name: Run the same chess sources through real WASM
+        run: node tools/wasm-chess-smoke.mjs wasm-pkg
