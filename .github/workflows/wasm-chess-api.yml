@@ -41,6 +41,9 @@ jobs:
       - name: Run neural input and policy contract
         run: my-lisp/target/release/my-lisp tests/neural-contract.wsm
 
+      - name: Run deterministic PUCT reference
+        run: my-lisp/target/release/my-lisp tests/puct.wsm
+
       - name: Build canonical WASM adapter
         run: wasm-pack build my-lisp/crates/my-lisp-wasm --target nodejs --out-dir "$GITHUB_WORKSPACE/wasm-pkg"
 

@@ -1,0 +1,61 @@
+(load "lib/chess.my")
+(load "lib/evaluation.wsm")
+(load "lib/puct.wsm")
+
+(def puct-assert
+  (lambda (name condition)
+    (cond (condition (print (list name (quote PASS))))
+          (t ((lambda ()
+                (print (list name (quote FAIL)))
+                (car chess-empty)))))))
+
+; Fixed-tree selection: unvisited high-prior child wins exploration score.
+(def fixture-root (puct-node chess-empty chess-empty 1))
+(def fixture-a (puct-node chess-empty (chess-move 0 1) (/ 1 4)))
+(def fixture-b (puct-node chess-empty (chess-move 0 8) (/ 3 4)))
+(vector-set! fixture-root puct-visits-field 4)
+(vector-set! fixture-a puct-visits-field 2)
+(vector-set! fixture-a puct-value-sum-field 1)
+(vector-set! fixture-root puct-children-field (list fixture-a fixture-b))
+(puct-assert (quote selection-formula) (eq (puct-select-best fixture-root 1) fixture-b))
+
+; Alternating backup: leaf value is seen with opposite sign at its parent.
+(puct-backup! (list fixture-b fixture-root) 1)
+(puct-assert (quote leaf-backup-visits) (= (puct-visits fixture-b) 1))
+(puct-assert (quote leaf-backup-value) (= (puct-value-sum fixture-b) 1))
+(puct-assert (quote root-backup-sign) (= (puct-value-sum fixture-root) -1))
+
+; Real chess integration: legal children and normalized visit policy.
+(def chess-root (puct-run (chess-initial-position) 25 1 puct-material-evaluator))
+(puct-assert (quote root-visits) (= (puct-visits chess-root) 25))
+(puct-assert (quote legal-child-count) (= (length (puct-children chess-root)) 20))
+(puct-assert (quote best-is-legal)
+  (let ((best (puct-best-move chess-root)))
+    (member? best (chess-legal-moves (chess-initial-position)))))
+(puct-assert (quote temperature-one-normalizes)
+  (= (puct-policy-total-visits (puct-children chess-root) 0) 24))
+
+; Injected material evaluator guides a real tree toward the unique queen
+; capture, while legality and state transitions remain owned by chess.my.
+(def capture-board (make-vector 64))
+(vector-set! capture-board 4 (quote wk))
+(vector-set! capture-board 60 (quote bk))
+(vector-set! capture-board 8 (quote wr))
+(vector-set! capture-board 16 (quote bq))
+(def capture-root
+  (puct-run (chess-position capture-board (quote white)
+              chess-empty chess-empty 0 1)
+    48 1 puct-material-evaluator))
+(puct-assert (quote evaluator-guided-capture)
+  (equal? (puct-best-move capture-root) (chess-move 8 16)))
+
+; Terminal outcome is always from the leaf side-to-move perspective.
+(def mate-board (make-vector 64))
+(vector-set! mate-board 56 (quote bk))
+(vector-set! mate-board 49 (quote wq))
+(vector-set! mate-board 42 (quote wk))
+(puct-assert (quote terminal-checkmate-value)
+  (= (puct-terminal-value
+       (chess-position mate-board (quote black) chess-empty chess-empty 0 1)) -1))
+
+(print (quote CHESS-PUCT-PASS))

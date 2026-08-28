@@ -1,0 +1,186 @@
+; Deterministic single-threaded PUCT reference for chess-lisp-zero.
+; Node value_sum is from that node's side-to-move perspective, therefore a
+; parent selects a child using -Q(child). Priors are uniform in this first
+; reference; neural policy injection is a later adapter over the same tree.
+
+(def puct-position-field 0)
+(def puct-move-field 1)
+(def puct-prior-field 2)
+(def puct-visits-field 3)
+(def puct-value-sum-field 4)
+(def puct-children-field 5)
+
+(def puct-node
+  (lambda (position move prior)
+    (let ((node (make-vector 6)))
+      ((lambda ()
+        (vector-set! node puct-position-field position)
+        (vector-set! node puct-move-field move)
+        (vector-set! node puct-prior-field prior)
+        (vector-set! node puct-visits-field 0)
+        (vector-set! node puct-value-sum-field 0)
+        (vector-set! node puct-children-field (quote ()))
+        node)))))
+
+(def puct-position (lambda (node) (vector-ref node puct-position-field)))
+(def puct-move (lambda (node) (vector-ref node puct-move-field)))
+(def puct-prior (lambda (node) (vector-ref node puct-prior-field)))
+(def puct-visits (lambda (node) (vector-ref node puct-visits-field)))
+(def puct-value-sum (lambda (node) (vector-ref node puct-value-sum-field)))
+(def puct-children (lambda (node) (vector-ref node puct-children-field)))
+
+(def puct-q
+  (lambda (node)
+    (cond ((eq (puct-visits node) 0) 0)
+          (t (/ (puct-value-sum node) (puct-visits node))))))
+
+(def puct-score
+  (lambda (parent child cpuct)
+    (+ (- 0 (puct-q child))
+       (/ (* cpuct (puct-prior child)
+             (sqrt (cond ((eq (puct-visits parent) 0) 1)
+                         (t (puct-visits parent)))))
+          (+ 1 (puct-visits child))))))
+
+(def puct-select-best-from
+  (lambda (parent children cpuct best best-score seen)
+    (cond ((atom children) best)
+          (t (let* ((child (car children))
+                    (score (puct-score parent child cpuct)))
+               (cond ((or (not seen) (> score best-score))
+                      (puct-select-best-from parent (cdr children) cpuct
+                        child score t))
+                     (t (puct-select-best-from parent (cdr children) cpuct
+                          best best-score seen))))))))
+
+(def puct-select-best
+  (lambda (parent cpuct)
+    (puct-select-best-from parent (puct-children parent) cpuct
+      (quote ()) 0 (quote ()))))
+
+(def puct-make-children
+  (lambda (position moves prior accepted)
+    (cond ((atom moves) (reverse accepted))
+          (t (let ((move (car moves)))
+               (puct-make-children position (cdr moves) prior
+                 (cons (puct-node (chess-apply-move position move) move prior)
+                   accepted)))))))
+
+(def puct-expand!
+  (lambda (node)
+    (let ((moves (chess-legal-moves (puct-position node))))
+      (cond ((atom moves) (quote ()))
+            (t (let ((children
+                       (puct-make-children (puct-position node) moves
+                         (/ 1 (length moves)) (quote ()))))
+                 ((lambda ()
+                   (vector-set! node puct-children-field children)
+                   children))))))))
+
+; Returns leaf-first path: (leaf ... root).
+(def puct-select-path
+  (lambda (node cpuct path)
+    (let ((next-path (cons node path)))
+      (cond ((atom (puct-children node)) next-path)
+            (t (puct-select-path (puct-select-best node cpuct) cpuct next-path))))))
+
+(def puct-terminal-value
+  (lambda (position)
+    (let ((terminal (chess-terminal-state position)))
+      (cond ((eq terminal (quote checkmate)) -1)
+            ((eq terminal (quote stalemate)) 0)
+            (t (quote ()))))))
+
+(def puct-backup!
+  (lambda (path value)
+    (cond ((atom path) value)
+          (t (let ((node (car path)))
+               ((lambda ()
+                 (vector-set! node puct-visits-field (+ 1 (puct-visits node)))
+                 (vector-set! node puct-value-sum-field
+                   (+ value (puct-value-sum node)))
+                 (puct-backup! (cdr path) (- 0 value)))))))))
+
+(def puct-simulate!
+  (lambda (root cpuct evaluator)
+    (let* ((path (puct-select-path root cpuct (quote ())))
+           (leaf (car path))
+           (terminal-value (puct-terminal-value (puct-position leaf)))
+           (value
+             (cond ((eq terminal-value chess-empty)
+                    ((lambda ()
+                      (puct-expand! leaf)
+                      (evaluator (puct-position leaf)))))
+                   (t terminal-value))))
+      (puct-backup! path value))))
+
+(def puct-run-from
+  (lambda (root remaining cpuct evaluator)
+    (cond ((eq remaining 0) root)
+          (t ((lambda ()
+                (puct-simulate! root cpuct evaluator)
+                (puct-run-from root (- remaining 1) cpuct evaluator)))))))
+
+(def puct-run
+  (lambda (position simulations cpuct evaluator)
+    (puct-run-from (puct-node position chess-empty 1)
+      simulations cpuct evaluator)))
+
+(def puct-best-child-from
+  (lambda (children best best-visits seen)
+    (cond ((atom children) best)
+          (t (let* ((child (car children)) (visits (puct-visits child)))
+               (cond ((or (not seen) (> visits best-visits))
+                      (puct-best-child-from (cdr children) child visits t))
+                     (t (puct-best-child-from (cdr children)
+                          best best-visits seen))))))))
+
+(def puct-best-move
+  (lambda (root)
+    (let ((child (puct-best-child-from (puct-children root)
+                   (quote ()) 0 (quote ()))))
+      (cond ((eq child chess-empty) chess-empty) (t (puct-move child))))))
+
+(def puct-policy-total-visits
+  (lambda (children total)
+    (cond ((atom children) total)
+          (t (puct-policy-total-visits (cdr children)
+               (+ total (puct-visits (car children))))))))
+
+(def puct-policy-temperature-one
+  (lambda (children total accepted)
+    (cond ((atom children) (reverse accepted))
+          (t (let ((child (car children)))
+               (puct-policy-temperature-one (cdr children) total
+                 (cons (list (puct-move child)
+                         (cond ((eq total 0) 0)
+                               (t (/ (puct-visits child) total))))
+                   accepted)))))))
+
+(def puct-policy-temperature-zero
+  (lambda (children best accepted)
+    (cond ((atom children) (reverse accepted))
+          (t (let ((child (car children)))
+               (puct-policy-temperature-zero (cdr children) best
+                 (cons (list (puct-move child)
+                         (cond ((eq child best) 1) (t 0))) accepted)))))))
+
+(def puct-policy
+  (lambda (root temperature)
+    (let ((children (puct-children root)))
+      (cond ((eq temperature 0)
+             (let ((best (puct-best-child-from children (quote ()) 0 (quote ()))))
+               (puct-policy-temperature-zero children best (quote ()))))
+            ((eq temperature 1)
+             (puct-policy-temperature-one children
+               (puct-policy-total-visits children 0) (quote ())))
+            (t (error "initial PUCT reference supports temperature 0 or 1"))))))
+
+(def puct-clamp-value
+  (lambda (value)
+    (cond ((> value 1) 1) ((< value -1) -1) (t value))))
+
+(def puct-material-evaluator
+  (lambda (position)
+    (puct-clamp-value
+      (/ (chess-material-score position (chess-position-side position)) 3900))))

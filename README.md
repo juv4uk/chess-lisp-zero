@@ -97,3 +97,6 @@ case-by-case, з провенансом і ревʼю ліцензії (chess.js
 owner hardware описані в [`docs/NEURAL-NETWORK-ROADMAP.md`](docs/NEURAL-NETWORK-ROADMAP.md).
 Виконуваний WSM-контракт `lib/neural-contract.wsm` фіксує 18×8×8 input
 planes і детермінований policy vocabulary із 1968 UCI labels.
+`lib/puct.wsm` додає детермінований однопотоковий PUCT reference з
+авторитетним chess expansion, alternating backup, temperature 0/1 та
+підмінним evaluator; це correctness baseline, а не твердження про силу гри.

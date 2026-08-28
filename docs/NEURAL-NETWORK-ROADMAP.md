@@ -178,3 +178,14 @@ policy/value outputs through the adapter boundary.
 No stage implies the next. In particular, a fast kernel does not prove a
 strong chess player, and a teacher agreement does not make the teacher a
 semantic authority.
+
+## Current implementation evidence
+
+| Slice | State | Evidence |
+|---|---|---|
+| 18×8×8 planes + 1968 policy vocabulary | EXECUTED | `tests/neural-contract.wsm` |
+| Deterministic single-threaded PUCT | EXECUTED | `lib/puct.wsm`, `tests/puct.wsm` |
+| Fixed-tree selection and alternating backup | EXECUTED | deterministic fixtures |
+| Authoritative chess expansion | EXECUTED | 20-child initial-position fixture |
+| Injectable evaluator | EXECUTED | material evaluator selects forced queen capture |
+| Neural training and play strength | DESIGNED | no trained checkpoint yet |
