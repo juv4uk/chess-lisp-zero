@@ -72,6 +72,7 @@ jobs:
           python3 -m pip install --disable-pip-version-check torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
           PYTHONPATH=. python3 tests/test_from_zero_torch.py
           PYTHONPATH=. python3 tests/test_replay.py
+          PYTHONPATH=. python3 tests/test_exploration.py
 
       - name: Build canonical WASM adapter
         run: wasm-pack build my-lisp/crates/my-lisp-wasm --target nodejs --out-dir "$GITHUB_WORKSPACE/wasm-pkg"

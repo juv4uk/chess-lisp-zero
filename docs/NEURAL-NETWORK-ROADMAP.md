@@ -200,4 +200,5 @@ semantic authority.
 | Injectable evaluator | EXECUTED | material evaluator selects forced queen capture |
 | Injectable policy priors | EXECUTED | normalized provider weights guide PUCT; uniform API preserved |
 | Policy priors → self-play `pi` | EXECUTED | injected provider reaches bounded WSM game record |
+| Seeded root Dirichlet exploration | EXECUTED | deterministic root-only mixer + provenance manifest fixture |
 | Neural training and play strength | DESIGNED | no trained checkpoint yet |
