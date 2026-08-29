@@ -45,10 +45,11 @@
 
   ("CHESS-LISP-ZERO-CPU-BASELINE-PROFILE" . (
     (priority . 7.0)
+    (done . t)
     (capabilities . (benchmark my-lisp chess evidence))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL))
     (origin . chess-lisp-zero)
-    (description . "Measure the vector-based my-lisp baseline on fixed perft/search fixtures using mono-ns. Report correctness separately from elapsed time and identify the dominant operation before proposing bitboards or new primitives.")))
+    (description . "Measure the vector-based my-lisp baseline on fixed perft/search fixtures using mono-ns. Report correctness separately from elapsed time and identify the dominant operation before proposing bitboards or new primitives. STATUS: completed 2026-08-29 by vyasa -- SHA bf98a5c (pushed): tests/bench-baseline.my + docs/CPU-BASELINE-PROFILE.md. All fixtures ok t; perft node ≈ 17-20 ms on this host (i5-6400, mono-ms, release bf68044); legal-move filtering dominant, 64-cell board copy secondary. Evidence-only per task wording: NO bitboard/new-primitive proposal made.")))
 
   ("CHESS-LISP-ZERO-TENSOR-DESCRIPTOR-ADR" . (
     (priority . 7.0)
