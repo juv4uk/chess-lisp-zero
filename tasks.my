@@ -110,7 +110,7 @@
     (capabilities . (chess my-lisp machine-learning testing evidence))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-FULL-RULES-FEN))
     (origin . chess-lisp-zero)
-    (description . "Ratify an implementation-independent chess ML boundary: canonical 18x8x8 input planes, side-to-move normalization, castling/en-passant planes, deterministic 1968 UCI policy labels, promotion labels and policy flipping. Derive fixtures from license-cleared evidence and require round-trip/differential checks; do not make historical Python code authoritative.")))
+    (description . "Ratify an implementation-independent chess ML boundary: canonical 18x8x8 input planes, side-to-move normalization, castling/en-passant planes, deterministic 1968 UCI policy labels, promotion labels and policy flipping. Derive fixtures from license-cleared evidence and require round-trip/differential checks; do not make historical Python code authoritative. STATUS: completed 2026-08-29 by yukti -- SHA ea6a7bd (pushed): docs/ADR-POLICY-PLANE-CONTRACT.md.")))
 
   ("CHESS-LISP-ZERO-MYLISP-PUCT-MCTS" . (
     (priority . 8.0)
