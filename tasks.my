@@ -8,6 +8,7 @@
 
   ("CHESS-LISP-ZERO-CHESS-RULES-PERFT" . (
     (priority . 10.0)
+    (done . t)
     (capabilities . (my-lisp chess testing))
     (depends-on . ())
     (origin . chess-lisp-zero)
@@ -127,6 +128,7 @@
 
   ("CHESS-LISP-ZERO-SELF-PLAY-REPLAY-VERIFY" . (
     (priority . 6.0)
+    (done . t)
     (capabilities . (chess my-lisp wsm testing evidence))
     (depends-on . (CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
