@@ -198,4 +198,5 @@ semantic authority.
 | Fixed-tree selection and alternating backup | EXECUTED | deterministic fixtures |
 | Authoritative chess expansion | EXECUTED | 20-child initial-position fixture |
 | Injectable evaluator | EXECUTED | material evaluator selects forced queen capture |
+| Injectable policy priors | EXECUTED | normalized provider weights guide PUCT; uniform API preserved |
 | Neural training and play strength | DESIGNED | no trained checkpoint yet |

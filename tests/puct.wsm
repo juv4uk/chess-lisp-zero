@@ -35,6 +35,37 @@
 (puct-assert (quote temperature-one-normalizes)
   (= (puct-policy-total-visits (puct-children chess-root) 0) 24))
 
+; External policy weights are aligned with authoritative legal-move order,
+; normalized inside PUCT and influence selection.  The provider is deliberately
+; plain WSM: a neural process adapter can supply the same list later.
+(def preferred-move (chess-move 1 18))
+(def preferred-weights
+  (lambda (moves)
+    (cond ((atom moves) (quote ()))
+          (t (cons (cond ((equal? (car moves) preferred-move) 9) (t 1))
+               (preferred-weights (cdr moves)))))))
+(def preferred-provider
+  (lambda (position moves) (preferred-weights moves)))
+(def prior-root (puct-node (chess-initial-position) chess-empty 1))
+(def prior-children (puct-expand-with-priors! prior-root preferred-provider))
+(vector-set! prior-root puct-visits-field 1)
+(puct-assert (quote injected-priors-normalize)
+  (= (puct-prior-weight-total
+       (map (lambda (child) (puct-prior child)) prior-children) 0) 1))
+(puct-assert (quote injected-prior-guides-selection)
+  (equal? (puct-move (puct-select-best prior-root 1)) preferred-move))
+(def injected-run
+  (puct-run-with-priors (chess-initial-position) 2 1
+    puct-material-evaluator preferred-provider))
+(puct-assert (quote injected-run-public-api)
+  (equal? (puct-best-move injected-run) preferred-move))
+
+; Compatibility boundary: the original expansion remains exactly uniform.
+(def uniform-root (puct-node (chess-initial-position) chess-empty 1))
+(def uniform-children (puct-expand! uniform-root))
+(puct-assert (quote default-prior-remains-uniform)
+  (= (puct-prior (car uniform-children)) (/ 1 20)))
+
 ; Injected material evaluator guides a real tree toward the unique queen
 ; capture, while legality and state transitions remain owned by chess.my.
 (def capture-board (make-vector 64))
