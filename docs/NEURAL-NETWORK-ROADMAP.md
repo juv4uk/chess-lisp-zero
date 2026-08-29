@@ -191,6 +191,7 @@ semantic authority.
 | 18×8×8 planes + 1968 policy vocabulary | EXECUTED | `tests/neural-contract.wsm` |
 | Deterministic single-threaded PUCT | EXECUTED | `lib/puct.wsm`, `tests/puct.wsm` |
 | PUCT policy → `(planes, sparse pi, side, z)` records | EXECUTED | `lib/self-play.wsm`, `tests/self-play.wsm` |
+| Bounded WSM self-play game driver | EXECUTED | `self-play-game`, bounded one-ply fixture |
 | Seeded PyTorch train step + strict checkpoint/reload | EXECUTED | `training/from_zero_torch.py`, `tests/test_from_zero_torch.py` |
 | WSM semantic replay pin | EXECUTED | `tests/replay-verify.wsm`, `tests/fixtures/self-play-replay-fix.my` |
 | Bounded deterministic runtime replay + resume | EXECUTED | `training/replay.py`, `tests/test_replay.py` |

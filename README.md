@@ -111,3 +111,5 @@ SHA-256 checkpoint/reload. Це виконуваний CUDA/CPU seam, не тв�
 `training/replay.py` додає bounded cyclic replay із deterministic sampling,
 pure-from-zero gate та checksum-protected resume. Він доповнює, а не замінює
 pure-WSM semantic fixture у `tests/replay-verify.wsm`.
+`self-play-game` додає bounded game driver: terminal detection, PUCT move,
+authoritative state transition, chronological records і explicit max-ply draw.

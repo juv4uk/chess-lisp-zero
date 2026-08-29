@@ -45,11 +45,49 @@
           ((eq side winner) 1)
           (t -1))))
 
-(def self-play-finalize!
+(def self-play-finalize-from!
   (lambda (records winner)
     (cond ((atom records) records)
           (t ((lambda ()
                 (vector-set! (car records) self-play-outcome-field
                   (self-play-outcome-for-side
                     (vector-ref (car records) self-play-side-field) winner))
-                (self-play-finalize! (cdr records) winner)))))))
+                (self-play-finalize-from! (cdr records) winner)))))))
+
+(def self-play-finalize!
+  (lambda (records winner)
+    ((lambda () (self-play-finalize-from! records winner) records))))
+
+(def self-play-terminal-winner
+  (lambda (position terminal)
+    (cond ((eq terminal (quote checkmate))
+           (chess-opposite (chess-position-side position)))
+          ((eq terminal (quote stalemate)) (quote draw))
+          (t chess-empty))))
+
+(def self-play-game-from
+  (lambda (position remaining simulations cpuct evaluator temperature records)
+    (let* ((terminal (chess-terminal-state position))
+           (winner (self-play-terminal-winner position terminal)))
+      (cond ((not (eq winner chess-empty))
+             (self-play-finalize! (reverse records) winner))
+            ((eq remaining 0)
+             (self-play-finalize! (reverse records) (quote draw)))
+            (t (let* ((root (puct-run position simulations cpuct evaluator))
+                      (move (puct-best-move root))
+                      (record (self-play-example-from-root
+                                position root temperature)))
+                 (cond ((atom move)
+                        (error "non-terminal self-play position has no move"))
+                       (t (self-play-game-from
+                            (chess-apply-move position move) (- remaining 1)
+                            simulations cpuct evaluator temperature
+                            (cons record records))))))))))
+
+(def self-play-game
+  (lambda (position max-plies simulations cpuct evaluator temperature)
+    (cond ((<= simulations 1)
+           (error "self-play requires at least two PUCT simulations"))
+          ((< max-plies 0) (error "self-play max-plies cannot be negative"))
+          (t (self-play-game-from position max-plies simulations cpuct
+               evaluator temperature (quote ()))))))

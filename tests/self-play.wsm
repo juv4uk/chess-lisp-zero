@@ -44,7 +44,8 @@
       (chess-position-castling initial) chess-empty 0 1)
     (quote ())))
 (def records (list example black-example))
-(self-play-finalize! records (quote white))
+(def finalized (self-play-finalize! records (quote white)))
+(self-play-assert (quote finalize-returns-records) (= (length finalized) 2))
 (self-play-assert (quote white-win-target)
   (= (vector-ref example self-play-outcome-field) 1))
 (self-play-assert (quote black-loss-target)
@@ -54,5 +55,21 @@
   (= (vector-ref example self-play-outcome-field) 0))
 (self-play-assert (quote draw-target-black)
   (= (vector-ref black-example self-play-outcome-field) 0))
+
+; One real bounded ply: authoritative legal expansion, PUCT selection,
+; state transition, record creation, then explicit max-ply draw finalization.
+(def bounded-board (make-vector 64))
+(vector-set! bounded-board 4 (quote wk))
+(vector-set! bounded-board 60 (quote bk))
+(def bounded-position
+  (chess-position bounded-board (quote white) chess-empty chess-empty 0 1))
+(def bounded-game
+  (self-play-game bounded-position 1 2 1 puct-material-evaluator 1))
+(self-play-assert (quote bounded-game-one-record) (= (length bounded-game) 1))
+(self-play-assert (quote bounded-game-policy-normalized)
+  (= (self-play-policy-sum
+       (vector-ref (car bounded-game) self-play-policy-field) 0) 1))
+(self-play-assert (quote bounded-game-max-ply-draw)
+  (= (vector-ref (car bounded-game) self-play-outcome-field) 0))
 
 (print (quote CHESS-SELF-PLAY-CONTRACT-PASS))
