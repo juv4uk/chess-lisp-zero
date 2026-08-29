@@ -12,6 +12,7 @@ on:
       - 'lib/puct.wsm'
       - 'lib/self-play.wsm'
       - 'tests/neural-contract.wsm'
+      - 'tests/neural-fixtures.wsm'
       - 'tests/puct.wsm'
       - 'tests/self-play.wsm'
       - 'tests/replay-verify.wsm'
@@ -53,6 +54,9 @@ jobs:
 
       - name: Run neural input and policy contract
         run: my-lisp/target/release/my-lisp tests/neural-contract.wsm
+
+      - name: Run asymmetric neural semantic fixtures
+        run: my-lisp/target/release/my-lisp tests/neural-fixtures.wsm
 
       - name: Run deterministic PUCT reference
         run: my-lisp/target/release/my-lisp tests/puct.wsm

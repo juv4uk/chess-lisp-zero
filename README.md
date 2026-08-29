@@ -62,6 +62,7 @@ perft-позиції додатково перевіряють їх у зв'яз
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft-quick.my
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/apply-move.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/fen.wsm
+/home/agents/GitHub/my-lisp/target/release/my-lisp tests/neural-fixtures.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/perft-standard.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/evaluation.wsm
 /home/agents/GitHub/my-lisp/target/release/my-lisp tests/search.wsm
