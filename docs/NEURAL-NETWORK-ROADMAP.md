@@ -192,6 +192,8 @@ semantic authority.
 | Deterministic single-threaded PUCT | EXECUTED | `lib/puct.wsm`, `tests/puct.wsm` |
 | PUCT policy → `(planes, sparse pi, side, z)` records | EXECUTED | `lib/self-play.wsm`, `tests/self-play.wsm` |
 | Seeded PyTorch train step + strict checkpoint/reload | EXECUTED | `training/from_zero_torch.py`, `tests/test_from_zero_torch.py` |
+| WSM semantic replay pin | EXECUTED | `tests/replay-verify.wsm`, `tests/fixtures/self-play-replay-fix.my` |
+| Bounded deterministic runtime replay + resume | EXECUTED | `training/replay.py`, `tests/test_replay.py` |
 | Fixed-tree selection and alternating backup | EXECUTED | deterministic fixtures |
 | Authoritative chess expansion | EXECUTED | 20-child initial-position fixture |
 | Injectable evaluator | EXECUTED | material evaluator selects forced queen capture |

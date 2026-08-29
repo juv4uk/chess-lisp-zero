@@ -14,8 +14,11 @@ on:
       - 'tests/neural-contract.wsm'
       - 'tests/puct.wsm'
       - 'tests/self-play.wsm'
+      - 'tests/replay-verify.wsm'
+      - 'tests/fixtures/self-play-replay-fix.my'
       - 'training/**'
       - 'tests/test_from_zero_torch.py'
+      - 'tests/test_replay.py'
       - 'docs/NEURAL-NETWORK-ROADMAP.md'
       - 'docs/GPU-PROFILE-BENCHMARK-2026-08-29.md'
       - 'src/chess-api.mjs'
@@ -57,10 +60,14 @@ jobs:
       - name: Run from-zero self-play record contract
         run: my-lisp/target/release/my-lisp tests/self-play.wsm
 
+      - name: Verify frozen WSM self-play replay fixture
+        run: my-lisp/target/release/my-lisp tests/replay-verify.wsm
+
       - name: Run bounded from-zero PyTorch checkpoint smoke
         run: |
           python3 -m pip install --disable-pip-version-check torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
           PYTHONPATH=. python3 tests/test_from_zero_torch.py
+          PYTHONPATH=. python3 tests/test_replay.py
 
       - name: Build canonical WASM adapter
         run: wasm-pack build my-lisp/crates/my-lisp-wasm --target nodejs --out-dir "$GITHUB_WORKSPACE/wasm-pkg"

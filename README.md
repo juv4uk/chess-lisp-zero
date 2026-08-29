@@ -108,3 +108,6 @@ planes і детермінований policy vocabulary із 1968 UCI labels.
 seeded random weights, policy/value loss, strict from-zero provenance та
 SHA-256 checkpoint/reload. Це виконуваний CUDA/CPU seam, не твердження про
 силу гри.
+`training/replay.py` додає bounded cyclic replay із deterministic sampling,
+pure-from-zero gate та checksum-protected resume. Він доповнює, а не замінює
+pure-WSM semantic fixture у `tests/replay-verify.wsm`.
