@@ -124,7 +124,10 @@
     (capabilities . (python pytorch chess machine-learning provenance evidence))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
-    (description . "Define a process boundary that uses the existing chess-tauri-zero PyTorch policy/value network as an optional teacher/oracle for normalized fixtures. Verify model/config/weight provenance, exact input/output contracts and deterministic recorded responses. PyTorch remains replaceable and must not become chess-rule authority or an implicit dependency of the my-lisp semantic core.")))
+    (description . "Define a process boundary that uses the existing chess-tauri-zero PyTorch policy/value network as an optional teacher/oracle for normalized fixtures. Verify model/config/weight provenance, exact input/output contracts and deterministic recorded responses. PyTorch remains replaceable and must not become chess-rule authority or an implicit dependency of the my-lisp semantic core.")
+    (done . t)
+    (context . "done 2026-08-29 by yukti. Implemented tools/oracle.py boundary script which loads PyTorch ChessResNet and weights, parses FEN into canonical 18x8x8 planes, and outputs deterministic JSON policies and value. Operates entirely via CLI as an optional teacher without being a hard my-lisp dependency.")
+  ))
 
   ("CHESS-LISP-ZERO-SELF-PLAY-FROM-ZERO" . (
     (priority . 8.0)
