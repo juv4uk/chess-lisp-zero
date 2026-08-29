@@ -201,4 +201,5 @@ semantic authority.
 | Injectable policy priors | EXECUTED | normalized provider weights guide PUCT; uniform API preserved |
 | Policy priors → self-play `pi` | EXECUTED | injected provider reaches bounded WSM game record |
 | Seeded root Dirichlet exploration | EXECUTED | deterministic root-only mixer + provenance manifest fixture |
+| Deterministic candidate-vs-current arena gate | EXECUTED | exact rational score, checkpoint identities and fail-closed promotion decision |
 | Neural training and play strength | DESIGNED | no trained checkpoint yet |
