@@ -72,4 +72,27 @@
 (self-play-assert (quote bounded-game-max-ply-draw)
   (= (vector-ref (car bounded-game) self-play-outcome-field) 0))
 
+; The neural-prior seam reaches the recorded training target, not only the
+; internal tree.  With two simulations, the preferred legal move receives the
+; sole child visit and therefore probability 1 in pi.
+(def bounded-preferred-move (car (chess-legal-moves bounded-position)))
+(def bounded-prior-weights
+  (lambda (moves)
+    (cond ((atom moves) (quote ()))
+          (t (cons (cond ((equal? (car moves) bounded-preferred-move) 9) (t 1))
+               (bounded-prior-weights (cdr moves)))))))
+(def bounded-prior-provider
+  (lambda (position moves) (bounded-prior-weights moves)))
+(def bounded-prior-game
+  (self-play-game-with-priors bounded-position 1 2 1 puct-material-evaluator
+    bounded-prior-provider 1))
+(def bounded-preferred-index
+  (chess-policy-move-index bounded-position bounded-preferred-move))
+(def bounded-prior-policy
+  (vector-ref (car bounded-prior-game) self-play-policy-field))
+(self-play-assert (quote injected-prior-records-preferred-index)
+  (and (= (length bounded-prior-policy) (length (chess-legal-moves bounded-position)))
+       (= (car (car bounded-prior-policy)) bounded-preferred-index)
+       (= (second (car bounded-prior-policy)) 1)))
+
 (print (quote CHESS-SELF-PLAY-CONTRACT-PASS))

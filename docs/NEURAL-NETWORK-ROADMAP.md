@@ -199,4 +199,5 @@ semantic authority.
 | Authoritative chess expansion | EXECUTED | 20-child initial-position fixture |
 | Injectable evaluator | EXECUTED | material evaluator selects forced queen capture |
 | Injectable policy priors | EXECUTED | normalized provider weights guide PUCT; uniform API preserved |
+| Policy priors → self-play `pi` | EXECUTED | injected provider reaches bounded WSM game record |
 | Neural training and play strength | DESIGNED | no trained checkpoint yet |
