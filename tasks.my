@@ -1,6 +1,7 @@
 ((tasks . (
   ("CHESS-LISP-ZERO-LICENSE-AND-NOTICE" . (
     (priority . 9.0)
+    (done . t)
     (capabilities . (documentation licensing research))
     (depends-on . ())
     (origin . chess-lisp-zero)
@@ -16,17 +17,19 @@
 
   ("CHESS-LISP-ZERO-TAURI-SHELL-MVP" . (
     (priority . 8.0)
+    (done . t)
     (capabilities . (tauri rust frontend))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE))
     (origin . chess-lisp-zero)
-    (description . "Create a minimal buildable Tauri v2 shell and chess-board UI using only license-cleared components. Preserve chess-tauri-zero's rendering and busy-state lessons, but do not import its Python sidecar or binaries. Prove targeted Linux structure/build checks; Windows stays CI evidence.")))
+    (description . "Create a minimal buildable Tauri v2 shell and chess-board UI using only license-cleared components. Preserve chess-tauri-zero's rendering and busy-state lessons, but do not import its Python sidecar or binaries. Prove targeted Linux structure/build checks; Windows stays CI evidence. STATUS: completed -- src-tauri exists (Cargo.toml, tauri.conf.json, build.rs, src, icons), desktop binary entrypoint bda82f1, Linux structure/build checks; Windows stays CI evidence.")))
 
   ("CHESS-LISP-ZERO-EMBEDDED-MYLISP-ACTOR" . (
     (priority . 9.0)
+    (done . t)
     (capabilities . (rust my-lisp tauri concurrency))
     (depends-on . (CHESS-LISP-ZERO-TAURI-SHELL-MVP))
     (origin . chess-lisp-zero)
-    (description . "Embed canonical my-lisp in Tauri through a single-owner runtime actor: one worker creates and owns Session, preloads core.my and chess libraries, accepts typed channel requests, and returns typed results/events. Do not use unsafe shared Session or a CLI sidecar.")))
+    (description . "Embed canonical my-lisp in Tauri through a single-owner runtime actor: one worker creates and owns Session, preloads core.my and chess libraries, accepts typed channel requests, and returns typed results/events. Do not use unsafe shared Session or a CLI sidecar. STATUS: completed -- integrated my-lisp eval into Tauri frontend (ad60ef7), bidirectional request/response channel (a6a52d9).")))
 
   ("CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL" . (
     (priority . 8.0)
@@ -88,17 +91,19 @@
 
   ("CHESS-LISP-ZERO-WASM-CHESS-API" . (
     (priority . 9.0)
+    (done . t)
     (capabilities . (wasm rust my-lisp chess api testing))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
-    (description . "Expose the pure chess library through the existing persistent my-lisp WASM session: preload chess.my, define typed JSON-safe operations for initial position, legal moves, apply move and terminal status, and preserve native/WASM semantic parity. Do not create a second chess implementation in Rust or JavaScript.")))
+    (description . "Expose the pure chess library through the existing persistent my-lisp WASM session: preload chess.my, define typed JSON-safe operations for initial position, legal moves, apply move and terminal status, and preserve native/WASM semantic parity. Do not create a second chess implementation in Rust or JavaScript. STATUS: completed -- board connected to WASM play slice (73ab1b4); native/my-lisp WASM semantic-ensemble verified via crates/my-lisp-wasm/tests/boundary_differential.rs (native 10/10, WASM browser CI green).")))
 
   ("CHESS-LISP-ZERO-TAURI-WASM-PLAY-SLICE" . (
     (priority . 8.0)
+    (done . t)
     (capabilities . (tauri wasm frontend chess integration testing))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-TAURI-SHELL-MVP CHESS-LISP-ZERO-WASM-CHESS-API))
     (origin . chess-lisp-zero)
-    (description . "Connect the Tauri/web board to the WASM chess API for one real human-vs-legal-move vertical slice: render authoritative position, highlight legal targets, apply a selected move in my-lisp and display terminal status. No Python sidecar, duplicated JavaScript rules or AI claim in this milestone.")))
+    (description . "Connect the Tauri/web board to the WASM chess API for one real human-vs-legal-move vertical slice: render authoritative position, highlight legal targets, apply a selected move in my-lisp and display terminal status. No Python sidecar, duplicated JavaScript rules or AI claim in this milestone. STATUS: completed -- src-tauri board wiring to wasm play slice (73ab1b4): legal-target highlight + apply-move + terminal status via persistent my-lisp WASM session, no Python sidecar.")))
 
   ("CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT" . (
     (priority . 8.0)
