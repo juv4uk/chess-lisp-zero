@@ -41,10 +41,11 @@
 
   ("CHESS-LISP-ZERO-UCI-ADAPTER" . (
     (priority . 6.0)
+    (done . t)
     (capabilities . (my-lisp chess protocol testing))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
-    (description . "Add an optional UCI adapter around the my-lisp chess engine for compatibility and differential comparison with chess-tauri-zero. Keep the internal Tauri API typed; UCI is an external adapter, not the in-process authority.")))
+    (description . "Add an optional UCI adapter around the my-lisp chess engine for compatibility and differential comparison with chess-tauri-zero. Keep the internal Tauri API typed; UCI is an external adapter, not the in-process authority. STATUS: completed 2026-08-29 by Viveka, recovering Ganaka's abandoned work. Live private-TCP gate: 26/26 PASS including handshake, malformed-input survival, startpos/move/FEN state, three published perft fixtures at d1+d2, bounded go variants, and quit framing. See docs/UCI-ADAPTER.md.")))
 
   ("CHESS-LISP-ZERO-CPU-BASELINE-PROFILE" . (
     (priority . 7.0)
