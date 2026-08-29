@@ -36,12 +36,12 @@ def validate_record(record: dict) -> None:
 
 
 def _encode_rng_state(generator: torch.Generator) -> str:
-    return base64.b64encode(generator.get_state().numpy().tobytes()).decode("ascii")
+    return base64.b64encode(bytes(generator.get_state().tolist())).decode("ascii")
 
 
 def _decode_rng_state(encoded: str) -> torch.Tensor:
     raw = base64.b64decode(encoded, validate=True)
-    return torch.frombuffer(bytearray(raw), dtype=torch.uint8).clone()
+    return torch.tensor(list(raw), dtype=torch.uint8)
 
 
 class ReplayBuffer:
