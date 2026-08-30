@@ -1,5 +1,11 @@
 ((tasks . (
-  ("CHESS-LISP-ZERO-LICENSE-AND-NOTICE" . (
+     ("BILINGUAL-DOCUMENTATION-AUDIT" .
+    ((priority . 9.0)
+     (capabilities . (documentation translation audit policy))
+     (origin . ecosystem)
+     (description . "Enforce the DOCUMENTATION LANGUAGE / МОВА ДОКУМЕНТАЦІЇ policy. Every human-authored markdown file (README, memory, plans, architecture, research) MUST have a substantive Ukrainian translation. Identify English-only documents and translate them. Do not translate machine identifiers or immutable historical records. Ensure every new or edited markdown document is bilingual.")))
+
+("CHESS-LISP-ZERO-LICENSE-AND-NOTICE" . (
     (priority . 9.0)
     (done . t)
     (capabilities . (documentation licensing research))
