@@ -92,6 +92,8 @@
     (description . "Create the first fixture-level evidence matrix separating my-lisp CPU, CML CPU, CUDA, RTL simulation, synthesis and physical FPGA. Same result is scoped to the exact fixture/kernel; speed and play strength remain separate claims.")))
 
   ("CHESS-LISP-ZERO-FULL-RULES-FEN" . (
+    (claimed-by . prajna)
+
     (priority . 9.0)
     (capabilities . (my-lisp chess testing serialization))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
