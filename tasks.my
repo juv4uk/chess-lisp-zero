@@ -76,6 +76,8 @@
     (description . "Map the minimum AlphaZero inference operations against live CML Compute IR: matmul, conv2d, relu, reductions, softmax and batch-normalization inference. For each classify implemented/expressible/missing, required semantic obligation, CPU oracle and smallest CUDA differential slice. Design only; no broad kernel implementation.")))
 
   ("CHESS-LISP-ZERO-FPGA-KERNEL-SELECTION" . (
+    (claimed-by . prajna)
+
     (priority . 6.0)
     (capabilities . (fpga-lisp hardware chess evidence architecture))
     (depends-on . (CHESS-LISP-ZERO-CPU-BASELINE-PROFILE))
