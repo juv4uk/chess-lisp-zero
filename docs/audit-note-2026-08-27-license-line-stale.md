@@ -2,7 +2,7 @@
 
 **Статус:** ЗВІТ (виявлено, не виправлено).
 **Джерело:** agent-team аудит суперечностей/застарілих пунктів, повний
-звіт — `/home/agents/ecosystem/docs/agent-team-contradiction-audit-2026-08-27.md`
+звіт — `/home/agents/ecosystem/docs/agent-coordination/agent-team-contradiction-audit-2026-08-27.md`
 (§4.1). Той же звіт (§4.0) фіксує, що бриф координатора цій команді
 спирався на застарілу (відкочену) широку ліцензійну політику —
 чинна політика вузька: заборонено лише chess.js, chess-tauri-zero/PyTorch

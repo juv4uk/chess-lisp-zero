@@ -18,5 +18,5 @@
 ## Third-party material
 
 Перед додаванням стороннього коду, наборів партій, ваг або шахових баз
-перевірте `/home/agents/ecosystem/docs/LICENSE-MATRIX.md` і створіть NOTICE,
+перевірте `/home/agents/ecosystem/docs/policy/LICENSE-MATRIX.md` і створіть NOTICE,
 якщо це вимагається правилами екосистеми.
