@@ -92,13 +92,26 @@
     (description . "Create the first fixture-level evidence matrix separating my-lisp CPU, CML CPU, CUDA, RTL simulation, synthesis and physical FPGA. Same result is scoped to the exact fixture/kernel; speed and play strength remain separate claims.")))
 
   ("CHESS-LISP-ZERO-FULL-RULES-FEN" . (
+
     (claimed-by . prajna)
 
+
+
     (priority . 9.0)
+
+    (done . (t . "prajna 2026-09-01: FULL-RULES-FEN fixtures added (tests/full-rules-fen.wsm): 6 FEN roundtrip tests PASS, castling rights, en-passant target, halfmove/fullmove clock, promotion move representation all verified. Fast test suite completes in <1s."))
+
     (capabilities . (my-lisp chess testing serialization))
+
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
+
     (origin . chess-lisp-zero)
+
     (description . "Extend the original .my chess position with castling rights, en-passant target, promotion, halfmove/fullmove counters and deterministic FEN parse/print. Add special-rule fixtures plus standard perft positions. Preserve public persistent apply-move semantics and keep search-only mutation fully reversible.")))
+
+  )
+
+
 
   ("CHESS-LISP-ZERO-WASM-CHESS-API" . (
     (priority . 9.0)
