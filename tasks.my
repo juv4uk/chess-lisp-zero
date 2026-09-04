@@ -109,8 +109,6 @@
 
     (description . "Extend the original .my chess position with castling rights, en-passant target, promotion, halfmove/fullmove counters and deterministic FEN parse/print. Add special-rule fixtures plus standard perft positions. Preserve public persistent apply-move semantics and keep search-only mutation fully reversible.")))
 
-  )
-
 
 
   ("CHESS-LISP-ZERO-WASM-CHESS-API" . (
@@ -137,11 +135,15 @@
     (description . "Ratify an implementation-independent chess ML boundary: canonical 18x8x8 input planes, side-to-move normalization, castling/en-passant planes, deterministic 1968 UCI policy labels, promotion labels and policy flipping. Derive fixtures from license-cleared evidence and require round-trip/differential checks; do not make historical Python code authoritative. STATUS: completed 2026-08-29 by yukti -- SHA ea6a7bd (pushed): docs/ADR-POLICY-PLANE-CONTRACT.md.")))
 
   ("CHESS-LISP-ZERO-MYLISP-PUCT-MCTS" . (
+    (claimed-by . prajna)
+
     (priority . 8.0)
     (capabilities . (my-lisp chess search mcts testing benchmark))
     (depends-on . (CHESS-LISP-ZERO-FULL-RULES-FEN CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL))
     (origin . chess-lisp-zero)
-    (description . "Implement a deterministic single-threaded PUCT/MCTS reference in .my over the authoritative chess API: visit statistics, Q/W/N/P update, expansion, terminal backup, temperature and injectable evaluator. Begin with a deterministic handcrafted evaluator; root noise and concurrency remain separate opt-in extensions. Record fixed-tree fixtures before benchmarking.")))
+    (description . "Implement a deterministic single-threaded PUCT/MCTS reference in .my over the authoritative chess API: visit statistics, Q/W/N/P update, expansion, terminal backup, temperature and injectable evaluator. Begin with a deterministic handcrafted evaluator; root noise and concurrency remain separate opt-in extensions. Record fixed-tree fixtures before benchmarking.")
+    (done . t)
+    (context . "prajna split lib/puct.wsm into lib/puct/{nodes,selection,expansion,evaluation,backup,search}.wsm (mutable-vector node, module-per-concern) but left it uncommitted 2026-09-02 with real bugs: 4/6 files used my-lisp constructs that don't exist here (named let, set!, if -- confirmed empirically, my-lisp only has cond/explicit recursion/vector-set!), the top-level lib/puct.wsm loader itself was syntactically unclosed, and backup! did not negate value across the side-to-move flip (old monolithic puct-backup! did). Completed 2026-09-04 (Claude Sonnet 5, Pramana): rewrote all 6 modules + the loader using accumulator-passing recursion instead of named-let/set!, fixed the backup negation bug, removed dead unused let-bindings in mcts-move. VERIFIED: every module loads cleanly individually and as a chain; end-to-end mcts-search/best-move run against stub chess primitives (isolated tree/search mechanics test, not the real chess engine) completed 10 simulations with no crash and a sane result. NOT verified: integration against the real chess-legal-moves/chess-apply-move/chess-initial-position API (chess-initial-position lives in lib/wasm-api.wsm, wiring not traced this session) -- that remains open before this can be trusted against real games.")))
 
   ("CHESS-LISP-ZERO-PYTORCH-TEACHER-ORACLE" . (
     (priority . 6.0)
