@@ -7,49 +7,49 @@
 
 ("CHESS-LISP-ZERO-LICENSE-AND-NOTICE" . (
     (priority . 9.0)
-    (done . nil))
+    (done . nil)
     (depends-on . ())
     (origin . chess-lisp-zero)
     (description . "Ratify the repository license with owner authority and add NOTICE-third-party.md covering the MIT chess-alpha-zero lineage before any code or data is copied. Owner decision 2026-08-27: chess.js is not used anywhere in this project (not even as an out-of-tree witness), so it needs no NOTICE entry. Treat model weights and game corpora as separate provenance decisions. STATUS: resolved -- NOTICE-third-party.md exists and lists no unresolved third-party material.")))
 
   ("CHESS-LISP-ZERO-CHESS-RULES-PERFT" . (
     (priority . 10.0)
-    (done . nil))
+    (done . nil)
     (depends-on . ())
     (origin . chess-lisp-zero)
     (description . "Implement the first semantic vertical slice as original .my code: 64-cell position, move representation, pseudo-legal generation, king-safety filtering, apply-move, terminal state, and deterministic perft depth 1..3 fixtures. Start with vectors; do not add Rust bit primitives before profiling. STATUS: completed 2026-08-29 by vyasa -- vertical slice exists (lib/chess.my, tests/perft.my); verified perft(1)=20, perft(2)=400, perft(3)=8902 via 20 independent per-root subtree runs (multi-set matches canonical perft(3) divide table). The apparent depth-3 hang was interpreter throughput (~minutes for 8902 nodes in one process), not non-termination. See docs/PERFT-VERIFY.md.")))
 
   ("CHESS-LISP-ZERO-TAURI-SHELL-MVP" . (
     (priority . 8.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE))
     (origin . chess-lisp-zero)
     (description . "Create a minimal buildable Tauri v2 shell and chess-board UI using only license-cleared components. Preserve chess-tauri-zero's rendering and busy-state lessons, but do not import its Python sidecar or binaries. Prove targeted Linux structure/build checks; Windows stays CI evidence. STATUS: completed -- src-tauri exists (Cargo.toml, tauri.conf.json, build.rs, src, icons), desktop binary entrypoint bda82f1, Linux structure/build checks; Windows stays CI evidence.")))
 
   ("CHESS-LISP-ZERO-EMBEDDED-MYLISP-ACTOR" . (
     (priority . 9.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-TAURI-SHELL-MVP))
     (origin . chess-lisp-zero)
     (description . "Embed canonical my-lisp in Tauri through a single-owner runtime actor: one worker creates and owns Session, preloads core.my and chess libraries, accepts typed channel requests, and returns typed results/events. Do not use unsafe shared Session or a CLI sidecar. STATUS: completed -- integrated my-lisp eval into Tauri frontend (ad60ef7), bidirectional request/response channel (a6a52d9).")))
 
   ("CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL" . (
     (priority . 8.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
     (description . "Build a normalized FEN/legal-move/perft differential gate between the my-lisp chess library and published perft reference data (chess-programming-wiki standard test positions -- starting position, Kiwipete, position 3, etc.). Owner decision 2026-08-27: no chess.js, not even as an out-of-tree witness (tools/witness-chessjs.mjs removed) -- published counts/divide breakdowns are public facts, not third-party code, and need no license/NOTICE entry. Source the reference numbers from the published tables directly (do not hand-transcribe from memory); record exact fixture, expected/actual, source citation and commit SHAs. Name retained for dependency-graph stability even though the witness is no longer chess.js. STATUS: completed 2026-08-29 by vyasa -- SHA 84c7aff (pushed): tests/differential-gate.wsm 12/12 PASS (perft d1+d2 for initial/Kiwipete/positions 3-6 + FEN round-trip per fixture; expected values sourced verbatim from CPW Perft Results page accessed 2026-08-29), source citation + honest open-coverage notes in docs/CHESSJS-DIFFERENTIAL-GATE.md. First two standard positions had been pre-covered by tests/perft-standard.wsm; this gate normalizes all six.")))
 
   ("CHESS-LISP-ZERO-UCI-ADAPTER" . (
     (priority . 6.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
     (description . "Add an optional UCI adapter around the my-lisp chess engine for compatibility and differential comparison with chess-tauri-zero. Keep the internal Tauri API typed; UCI is an external adapter, not the in-process authority. STATUS: completed 2026-08-29 by Viveka, recovering Ganaka's abandoned work. Live private-TCP gate: 26/26 PASS including handshake, malformed-input survival, startpos/move/FEN state, three published perft fixtures at d1+d2, bounded go variants, and quit framing. See docs/UCI-ADAPTER.md.")))
 
   ("CHESS-LISP-ZERO-CPU-BASELINE-PROFILE" . (
     (priority . 7.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL))
     (origin . chess-lisp-zero)
     (description . "Measure the vector-based my-lisp baseline on fixed perft/search fixtures using mono-ns. Report correctness separately from elapsed time and identify the dominant operation before proposing bitboards or new primitives. STATUS: completed 2026-08-29 by vyasa -- SHA bf98a5c (pushed): tests/bench-baseline.my + docs/CPU-BASELINE-PROFILE.md. All fixtures ok t; perft node ≈ 17-20 ms on this host (i5-6400, mono-ms, release bf68044); legal-move filtering dominant, 64-cell board copy secondary. Evidence-only per task wording: NO bitboard/new-primitive proposal made.")))
@@ -92,7 +92,7 @@
 
     (priority . 9.0)
 
-    (done . nil))
+    (done . nil)
 
     (capabilities . (my-lisp chess testing serialization))
 
@@ -106,14 +106,14 @@
 
   ("CHESS-LISP-ZERO-WASM-CHESS-API" . (
     (priority . 9.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
     (description . "Expose the pure chess library through the existing persistent my-lisp WASM session: preload chess.my, define typed JSON-safe operations for initial position, legal moves, apply move and terminal status, and preserve native/WASM semantic parity. Do not create a second chess implementation in Rust or JavaScript. STATUS: completed -- board connected to WASM play slice (73ab1b4); native/my-lisp WASM semantic-ensemble verified via crates/my-lisp-wasm/tests/boundary_differential.rs (native 10/10, WASM browser CI green).")))
 
   ("CHESS-LISP-ZERO-TAURI-WASM-PLAY-SLICE" . (
     (priority . 8.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-TAURI-SHELL-MVP CHESS-LISP-ZERO-WASM-CHESS-API))
     (origin . chess-lisp-zero)
     (description . "Connect the Tauri/web board to the WASM chess API for one real human-vs-legal-move vertical slice: render authoritative position, highlight legal targets, apply a selected move in my-lisp and display terminal status. No Python sidecar, duplicated JavaScript rules or AI claim in this milestone. STATUS: completed -- src-tauri board wiring to wasm play slice (73ab1b4): legal-target highlight + apply-move + terminal status via persistent my-lisp WASM session, no Python sidecar.")))
@@ -142,14 +142,14 @@
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
     (description . "Define a process boundary that uses the existing chess-tauri-zero PyTorch policy/value network as an optional teacher/oracle for normalized fixtures. Verify model/config/weight provenance, exact input/output contracts and deterministic recorded responses. PyTorch remains replaceable and must not become chess-rule authority or an implicit dependency of the my-lisp semantic core.")
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
     (description . "Implement a resumable from-zero training mode: random seeded weights, WSM-authoritative self-play, PUCT visit-policy targets, terminal outcome value targets, bounded replay, checkpoint manifests and deterministic arena gating. No teacher data, engine evaluations, books or pretrained weights may enter a from-zero run; teacher and hybrid modes remain explicitly separate.")))
 
   ("CHESS-LISP-ZERO-SELF-PLAY-REPLAY-VERIFY" . (
     (priority . 6.0)
-    (done . nil))
+    (done . nil)
     (depends-on . (CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
     (description . "Add a pure-WSM export/replay pin for the self-play record contract: freeze a committed fixture (FEN, side, PUCT-indexed sparse policy, outcome, derived 1152-plane vector) and, in pure WSM, re-parse the FEN, re-derive planes bit-exactly, re-index the policy against the legal-move vocabulary, and assert round-trip stability. No PyTorch, no training/ edits, no GPU; torch/CML consumers can assert against the same fixture. WSM stays the single semantic authority; defined 2026-08-29 by vyasa to stay non-overlapping with the torch from-zero backend. STATUS: completed 2026-08-29 by vyasa -- SHA f71d3ab (pushed): tests/replay-verify.wsm 9/9 PASS + SELF-PLAY-REPLAY-VERIFY-PASS, fixture tests/fixtures/self-play-replay-fix.my, driver docs/SELF-PLAY-REPLAY-VERIFY.md.")))
