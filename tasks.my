@@ -7,7 +7,7 @@
 
 ("CHESS-LISP-ZERO-LICENSE-AND-NOTICE" . (
     (priority . 9.0)
-    (done . t)
+    (done . nil)
     (capabilities . (documentation licensing research))
     (depends-on . ())
     (origin . chess-lisp-zero)
@@ -15,7 +15,7 @@
 
   ("CHESS-LISP-ZERO-CHESS-RULES-PERFT" . (
     (priority . 10.0)
-    (done . t)
+    (done . nil)
     (capabilities . (my-lisp chess testing))
     (depends-on . ())
     (origin . chess-lisp-zero)
@@ -23,7 +23,7 @@
 
   ("CHESS-LISP-ZERO-TAURI-SHELL-MVP" . (
     (priority . 8.0)
-    (done . t)
+    (done . nil)
     (capabilities . (tauri rust frontend))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE))
     (origin . chess-lisp-zero)
@@ -31,7 +31,7 @@
 
   ("CHESS-LISP-ZERO-EMBEDDED-MYLISP-ACTOR" . (
     (priority . 9.0)
-    (done . t)
+    (done . nil)
     (capabilities . (rust my-lisp tauri concurrency))
     (depends-on . (CHESS-LISP-ZERO-TAURI-SHELL-MVP))
     (origin . chess-lisp-zero)
@@ -39,7 +39,7 @@
 
   ("CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL" . (
     (priority . 8.0)
-    (done . t)
+    (done . nil)
     (capabilities . (testing evidence my-lisp chess))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
@@ -47,7 +47,7 @@
 
   ("CHESS-LISP-ZERO-UCI-ADAPTER" . (
     (priority . 6.0)
-    (done . t)
+    (done . nil)
     (capabilities . (my-lisp chess protocol testing))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
@@ -55,7 +55,7 @@
 
   ("CHESS-LISP-ZERO-CPU-BASELINE-PROFILE" . (
     (priority . 7.0)
-    (done . t)
+    (done . nil)
     (capabilities . (benchmark my-lisp chess evidence))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT CHESS-LISP-ZERO-CHESSJS-DIFFERENTIAL))
     (origin . chess-lisp-zero)
@@ -115,7 +115,7 @@
 
   ("CHESS-LISP-ZERO-WASM-CHESS-API" . (
     (priority . 9.0)
-    (done . t)
+    (done . nil)
     (capabilities . (wasm rust my-lisp chess api testing))
     (depends-on . (CHESS-LISP-ZERO-CHESS-RULES-PERFT))
     (origin . chess-lisp-zero)
@@ -123,7 +123,7 @@
 
   ("CHESS-LISP-ZERO-TAURI-WASM-PLAY-SLICE" . (
     (priority . 8.0)
-    (done . t)
+    (done . nil)
     (capabilities . (tauri wasm frontend chess integration testing))
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-TAURI-SHELL-MVP CHESS-LISP-ZERO-WASM-CHESS-API))
     (origin . chess-lisp-zero)
@@ -149,7 +149,7 @@
     (depends-on . (CHESS-LISP-ZERO-LICENSE-AND-NOTICE CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
     (description . "Define a process boundary that uses the existing chess-tauri-zero PyTorch policy/value network as an optional teacher/oracle for normalized fixtures. Verify model/config/weight provenance, exact input/output contracts and deterministic recorded responses. PyTorch remains replaceable and must not become chess-rule authority or an implicit dependency of the my-lisp semantic core.")
-    (done . t)
+    (done . nil)
     (context . "done 2026-08-29 by yukti. Implemented tools/oracle.py boundary script which loads PyTorch ChessResNet and weights, parses FEN into canonical 18x8x8 planes, and outputs deterministic JSON policies and value. Operates entirely via CLI as an optional teacher without being a hard my-lisp dependency.")
   ))
 
@@ -162,7 +162,7 @@
 
   ("CHESS-LISP-ZERO-SELF-PLAY-REPLAY-VERIFY" . (
     (priority . 6.0)
-    (done . t)
+    (done . nil)
     (capabilities . (chess my-lisp wsm testing evidence))
     (depends-on . (CHESS-LISP-ZERO-POLICY-PLANE-CONTRACT CHESS-LISP-ZERO-MYLISP-PUCT-MCTS))
     (origin . chess-lisp-zero)
