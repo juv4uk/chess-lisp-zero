@@ -114,3 +114,7 @@ pure-from-zero gate та checksum-protected resume. Він доповнює, а 
 pure-WSM semantic fixture у `tests/replay-verify.wsm`.
 `self-play-game` додає bounded game driver: terminal detection, PUCT move,
 authoritative state transition, chronological records і explicit max-ply draw.
+
+## Ліцензія
+
+Цей твір поширюється під [ВОЛЬНІСТЮ](LICENSE) — простим словом про свободу творити, пам'ятаючи про волю іншого.
