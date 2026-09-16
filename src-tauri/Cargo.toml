@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Chess engine on my-lisp with Tauri shell"
 authors = ["chess-lisp-zero contributors"]
 edition = "2021"
+license-file = "../LICENSE"
 
 [lib]
 name = "chess_lisp_zero_lib"
