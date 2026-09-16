@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Chess engine on my-lisp with Tauri shell",
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "build:wasm": "bash scripts/build-wasm.sh",
     "tauri": "tauri"
