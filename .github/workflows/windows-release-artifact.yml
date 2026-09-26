@@ -13,10 +13,10 @@ jobs:
       - name: Checkout chess-lisp-zero
         uses: actions/checkout@v4
 
-      - name: Checkout canonical my-lisp
+      - name: Checkout canonical SENS
         uses: actions/checkout@v4
         with:
-          repository: juv4uk/my-lisp
+          repository: juv4uk/sens
           path: my-lisp
 
       - name: Install Rust with WASM target
