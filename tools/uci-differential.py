@@ -44,7 +44,7 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 MY_LISP = os.environ.get(
-    "MY_LISP", "/home/agents/GitHub/my-lisp/target/release/my-lisp"
+    "MY_LISP", "/home/agents/GitHub/sens/target/release/my-lisp"
 )
 END_OK, END_QUIT = "uci-end-ok", "uci-end-quit"
 
