@@ -18,5 +18,5 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-my-lisp = { git = "https://github.com/juv4uk/my-lisp.git", branch = "main" }
-my-lisp-host = { git = "https://github.com/juv4uk/my-lisp.git", branch = "main" }
+my-lisp = { package = "sens", git = "https://github.com/juv4uk/sens.git", branch = "main" }
+my-lisp-host = { package = "sens-host", git = "https://github.com/juv4uk/sens.git", branch = "main" }

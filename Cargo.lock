@@ -457,8 +457,8 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 name = "chess-lisp-zero"
 version = "0.1.0"
 dependencies = [
- "my-lisp",
- "my-lisp-host",
+ "sens",
+ "sens-host",
  "serde",
  "serde_json",
  "tauri",
@@ -2095,16 +2095,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "my-lisp"
-version = "0.32.0"
-source = "git+https://github.com/juv4uk/my-lisp.git?branch=main#49283e55384fd1b86c27a78427b13cf411943887"
+name = "sens"
+version = "0.41.0"
+source = "git+https://github.com/juv4uk/sens.git?branch=main#f97543734a58584cf6ff81d45d41b38b076a756b"
 
 [[package]]
-name = "my-lisp-host"
-version = "0.32.0"
-source = "git+https://github.com/juv4uk/my-lisp.git?branch=main#49283e55384fd1b86c27a78427b13cf411943887"
+name = "sens-host"
+version = "0.41.0"
+source = "git+https://github.com/juv4uk/sens.git?branch=main#f97543734a58584cf6ff81d45d41b38b076a756b"
 dependencies = [
- "my-lisp",
+ "sens",
 ]
 
 [[package]]
