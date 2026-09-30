@@ -46,8 +46,7 @@ impl ChessRuntime {
             let mut session = Session {
                 environment: Environment::root(),
             };
-            load_core_library(&mut session)
-                .expect("embedded SENS Core4 library must bootstrap");
+            load_core_library(&mut session).expect("embedded SENS Core4 library must bootstrap");
 
             // Event loop: process requests sequentially.
             while let Ok(request) = receiver.recv() {
