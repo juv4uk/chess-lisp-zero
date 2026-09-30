@@ -1,4 +1,4 @@
-use my_lisp::{parse, eval_expr, Session, Value};
+use sens::{eval_program, load_core_library, Environment, Session};
 use serde::Serialize;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
@@ -23,11 +23,11 @@ pub enum RuntimeResponse {
     Err { message: String },
 }
 
-/// Single-owner my-lisp runtime actor.
+/// Single-owner SENS runtime actor.
 ///
-/// One worker thread creates and owns the Session, preloads core.my,
-/// and accepts typed channel requests. No unsafe shared Session —
-/// all access is sequential through the worker's channel.
+/// One worker thread creates and owns the Session, bootstraps the embedded
+/// canonical Core4 library, and accepts typed channel requests. No unsafe
+/// shared Session — all access is sequential through the worker's channel.
 pub struct ChessRuntime {
     sender: Sender<RuntimeRequest>,
 }
@@ -39,78 +39,40 @@ impl ChessRuntime {
 
         thread::spawn(move || {
             // Install host capabilities (filesystem, TCP, process-run).
-            my_lisp_host::install();
+            sens_host::install();
 
-            // Create session with root environment.
-            let session = Session::default();
-
-            // Try to preload core.my from sibling my-lisp repo.
-            let core_paths = [
-                "../my-lisp/lib/core.my",
-                "../../my-lisp/lib/core.my",
-                "../../../my-lisp/lib/core.my",
-            ];
-            for path in &core_paths {
-                if std::path::Path::new(path).exists() {
-                    if let Ok(source) = std::fs::read_to_string(path) {
-                        if let Ok(exprs) = parse(&source) {
-                            for expr in exprs {
-                                let _ = eval_expr(&expr, &session.environment);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
+            // One mutable session owns all lowering/evaluation state. Core4 is
+            // embedded by the sens crate; no sibling-repository source path.
+            let mut session = Session {
+                environment: Environment::root(),
+            };
+            load_core_library(&mut session)
+                .expect("embedded SENS Core4 library must bootstrap");
 
             // Event loop: process requests sequentially.
             while let Ok(request) = receiver.recv() {
                 let response = match request.kind {
-                    RequestKind::Eval { source } => {
-                        match parse(&source) {
-                            Ok(exprs) => {
-                                let mut last = Value::Nil;
-                                let mut error = None;
-                                for expr in exprs {
-                                    match eval_expr(&expr, &session.environment) {
-                                        Ok(value) => last = value,
-                                        Err(err) => {
-                                            error = Some(err.to_string());
-                                            break;
-                                        }
-                                    }
-                                }
-                                if let Some(msg) = error {
-                                    RuntimeResponse::Err { message: msg }
-                                } else {
-                                    RuntimeResponse::Ok { value: last.to_string() }
-                                }
-                            }
+                    RequestKind::Eval { source } => match eval_program(&source, &mut session) {
+                        Ok(result) => RuntimeResponse::Ok {
+                            value: result.value.to_string(),
+                        },
+                        Err(error) => RuntimeResponse::Err {
+                            message: error.to_string(),
+                        },
+                    },
+                    RequestKind::Load { path } => match std::fs::read_to_string(&path) {
+                        Ok(source) => match eval_program(&source, &mut session) {
+                            Ok(_) => RuntimeResponse::Ok {
+                                value: format!("loaded {}", path),
+                            },
                             Err(error) => RuntimeResponse::Err {
                                 message: error.to_string(),
                             },
-                        }
-                    }
-                    RequestKind::Load { path } => {
-                        match std::fs::read_to_string(&path) {
-                            Ok(source) => match parse(&source) {
-                                Ok(exprs) => {
-                                    for expr in exprs {
-                                        let _ = eval_expr(&expr, &session.environment);
-                                    }
-                                    RuntimeResponse::Ok {
-                                        value: format!("loaded {}", path),
-                                    }
-                                }
-                                Err(error) => RuntimeResponse::Err {
-                                    message: error.to_string(),
-                                },
-                            },
-                            Err(error) => RuntimeResponse::Err {
-                                message: format!("read error: {}", error),
-                            },
-                        }
-                    }
+                        },
+                        Err(error) => RuntimeResponse::Err {
+                            message: format!("read error: {}", error),
+                        },
+                    },
                 };
                 // Send response back; ignore send failure (caller dropped).
                 let _ = request.respond_to.send(response);
