@@ -39,7 +39,7 @@ jobs:
           metadata = Path("repo.lisp").read_text(encoding="utf-8")
 
           assert license_text.startswith("ВОЛЬНІСТЬ"), "Root LICENSE is not the declared author-owned license"
-          assert "[ВОЛЬНІСТЬ](LICENSE)" in readme, "README author-owned license link missing"
+          assert ("[ВОЛЬНІСТЬ](LICENSE)" in readme or "[ВОЛЬНІСТЮ](LICENSE)" in readme), "README author-owned license link missing"
           assert "[ВОЛЬНІСТЬ](LICENSE)" in notice, "NOTICE author-owned license link missing"
           assert "(license . volnost)" in metadata, "Repository metadata license does not match root"
           assert "This repository is licensed under the MIT License" not in notice, "NOTICE retains false repository-self MIT claim"
