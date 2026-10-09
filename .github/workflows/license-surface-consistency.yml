@@ -1,0 +1,48 @@
+name: License surface consistency
+
+on:
+  pull_request:
+    paths:
+      - LICENSE
+      - README.md
+      - NOTICE-third-party.md
+      - repo.lisp
+      - .github/workflows/license-surface-consistency.yml
+  push:
+    branches: [main]
+    paths:
+      - LICENSE
+      - README.md
+      - NOTICE-third-party.md
+      - repo.lisp
+      - .github/workflows/license-surface-consistency.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  license-surface:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify current author-owned license surfaces
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          license_text = Path("LICENSE").read_text(encoding="utf-8")
+          readme = Path("README.md").read_text(encoding="utf-8")
+          notice = Path("NOTICE-third-party.md").read_text(encoding="utf-8")
+          metadata = Path("repo.lisp").read_text(encoding="utf-8")
+
+          assert license_text.startswith("ВОЛЬНІСТЬ"), "Root LICENSE is not the declared author-owned license"
+          assert "[ВОЛЬНІСТЬ](LICENSE)" in readme, "README author-owned license link missing"
+          assert "[ВОЛЬНІСТЬ](LICENSE)" in notice, "NOTICE author-owned license link missing"
+          assert "(license . volnost)" in metadata, "Repository metadata license does not match root"
+          assert "This repository is licensed under the MIT License" not in notice, "NOTICE retains false repository-self MIT claim"
+          assert "Ліцензія: MIT" not in readme, "README retains false repository-self MIT claim"
+          print("PASS: author-owned license statements match root LICENSE; third-party notices remain independent")
+          PY
