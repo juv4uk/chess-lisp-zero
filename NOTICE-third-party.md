@@ -32,7 +32,9 @@ no license/NOTICE entry is needed for it at all.
 
 ## License of this repository
 
-This repository is licensed under the MIT License. See `LICENSE`.
+Author-owned work in this repository is released under [ВОЛЬНІСТЬ](LICENSE).
+Third-party material, if admitted later, keeps its own applicable license and
+provenance record.
 
 ## Chess piece icons
 
